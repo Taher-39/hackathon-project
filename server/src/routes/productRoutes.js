@@ -13,7 +13,7 @@ const {
   bestSellers,
 } = require("../controllers/productController");
 const { listReviews, upsertReview, deleteReview } = require("../controllers/reviewController");
-const { protect, requireRole } = require("../middleware/auth");
+const { protect, requireRole, requireEmailVerified } = require("../middleware/auth");
 
 const upload = multer({ storage });
 const router = express.Router();
@@ -25,10 +25,24 @@ router.get("/mine", protect, requireRole("supplier"), asyncHandler(myProducts));
 router.get("/:id", asyncHandler(getProduct));
 router.get("/:id/reviews", asyncHandler(listReviews));
 
-router.post("/", protect, requireRole("supplier"), upload.array("images", 5), asyncHandler(createProduct));
+router.post(
+  "/",
+  protect,
+  requireRole("supplier"),
+  requireEmailVerified,
+  upload.array("images", 5),
+  asyncHandler(createProduct)
+);
 router.post("/:id/reviews", protect, requireRole("buyer"), asyncHandler(upsertReview));
-router.put("/:id", protect, requireRole("supplier"), upload.array("images", 5), asyncHandler(updateProduct));
-router.delete("/:id", protect, requireRole("supplier"), asyncHandler(deleteProduct));
+router.put(
+  "/:id",
+  protect,
+  requireRole("supplier"),
+  requireEmailVerified,
+  upload.array("images", 5),
+  asyncHandler(updateProduct)
+);
+router.delete("/:id", protect, requireRole("supplier"), requireEmailVerified, asyncHandler(deleteProduct));
 router.delete("/:id/reviews", protect, requireRole("buyer"), asyncHandler(deleteReview));
 
 module.exports = router;
