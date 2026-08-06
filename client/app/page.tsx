@@ -11,6 +11,7 @@ import {
   Layers,
   Leaf,
   Snowflake,
+  Home,
   Package,
   ShieldCheck,
   MessageCircle,
@@ -31,12 +32,18 @@ import AnimatedCounter from "@/components/motion/AnimatedCounter";
 
 const PAGE_SIZE = 12;
 
+// Kept in sync with every category actually seeded in the DB — this doubles
+// as the last-resort fallback list if /products/categories can't be reached
+// (e.g. a cold-starting free-tier server), so a real category never just
+// vanishes because of a slow/failed request. Object.keys() below is what
+// renders when that happens, so any category missing here would disappear.
 const CATEGORY_ICONS: Record<string, typeof Shirt> = {
   Cotton: Shirt,
   Silk: Gem,
   Denim: Layers,
   Linen: Leaf,
   Wool: Snowflake,
+  "Home Textile": Home,
 };
 
 function categoryIcon(name: string) {
@@ -46,6 +53,7 @@ function categoryIcon(name: string) {
 export default function HomePage() {
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -94,10 +102,35 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    api
-      .get("/products/categories")
-      .then((res) => setCategories(res.data.data.categories))
-      .catch(() => {});
+    let cancelled = false;
+
+    // A dropped/failed request used to leave this section permanently stuck
+    // on the hardcoded fallback list, which looked like "Home Textile"
+    // randomly not showing up. A free-tier backend waking from a cold start
+    // can easily take longer than a single quick retry, so back off across
+    // 3 attempts (1.5s, 3s, 5s) before giving up — and only fall back to the
+    // hardcoded list (now kept in sync with every seeded category) as a
+    // last resort, never mid-flight.
+    const RETRY_DELAYS_MS = [1500, 3000, 5000];
+    function loadCategories(attempt = 0) {
+      api
+        .get("/products/categories")
+        .then((res) => {
+          if (cancelled) return;
+          setCategories(res.data.data.categories);
+          setCategoriesLoading(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (attempt < RETRY_DELAYS_MS.length) {
+            setTimeout(() => loadCategories(attempt + 1), RETRY_DELAYS_MS[attempt]);
+            return;
+          }
+          setCategories(Object.keys(CATEGORY_ICONS));
+          setCategoriesLoading(false);
+        });
+    }
+    loadCategories();
 
     api
       .get("/products/best-sellers", { params: { limit: 8 } })
@@ -108,6 +141,10 @@ export default function HomePage() {
       .get("/products", { params: { limit: 8, page: 1 } })
       .then((res) => setNewArrivals(res.data.data.products))
       .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -188,7 +225,7 @@ export default function HomePage() {
       <HeroCarousel slides={heroSlides} />
 
       {/* Trust / stats strip */}
-      <section className="border-b bg-white">
+      <section className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-3 gap-6 text-center sm:text-left">
           <div>
             <AnimatedCounter value={totalProducts || 15} className="text-2xl sm:text-3xl font-bold text-indigo-700" />
@@ -215,24 +252,31 @@ export default function HomePage() {
           <p className="text-gray-500 text-sm mb-6">Jump straight to the fabric type you need.</p>
         </Reveal>
         <RevealGroup className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {(categories.length ? categories : Object.keys(CATEGORY_ICONS)).slice(0, 10).map((cat) => {
-            const Icon = categoryIcon(cat);
-            return (
-              <RevealItem key={cat}>
-                <motion.button
-                  onClick={() => browseCategory(cat)}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full border rounded-xl bg-white p-4 flex flex-col items-center gap-2 hover:shadow-lg hover:border-indigo-200 transition-shadow"
-                >
-                  <div className="bg-indigo-50 text-indigo-600 rounded-full p-3">
-                    <Icon size={22} />
-                  </div>
-                  <span className="text-sm font-medium text-gray-800 text-center">{cat}</span>
-                </motion.button>
-              </RevealItem>
-            );
-          })}
+          {categoriesLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="border border-gray-200 rounded-xl bg-white p-4 h-[92px] animate-pulse"
+                />
+              ))
+            : categories.slice(0, 10).map((cat) => {
+                const Icon = categoryIcon(cat);
+                return (
+                  <RevealItem key={cat}>
+                    <motion.button
+                      onClick={() => browseCategory(cat)}
+                      whileHover={{ y: -4 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="w-full border border-gray-200 rounded-xl bg-white p-4 flex flex-col items-center gap-2 hover:shadow-lg hover:border-indigo-200 transition-shadow"
+                    >
+                      <div className="bg-indigo-50 text-indigo-600 rounded-full p-3">
+                        <Icon size={22} />
+                      </div>
+                      <span className="text-sm font-medium text-gray-800 text-center">{cat}</span>
+                    </motion.button>
+                  </RevealItem>
+                );
+              })}
         </RevealGroup>
       </section>
 
@@ -285,13 +329,13 @@ export default function HomePage() {
                   value={search}
                   onChange={(e) => updateFilter(setSearch)(e.target.value)}
                   placeholder="Search products, categories..."
-                  className="w-full border rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-shadow"
+                  className="w-full border border-gray-200 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-shadow"
                 />
               </div>
               <select
                 value={category}
                 onChange={(e) => updateFilter(setCategory)(e.target.value)}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
               >
                 <option value="">All categories</option>
                 {categories.map((c) => (
@@ -305,14 +349,14 @@ export default function HomePage() {
                 onChange={(e) => updateFilter(setMinPrice)(e.target.value)}
                 placeholder="Min $"
                 type="number"
-                className="border rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="border border-gray-200 rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
               />
               <input
                 value={maxPrice}
                 onChange={(e) => updateFilter(setMaxPrice)(e.target.value)}
                 placeholder="Max $"
                 type="number"
-                className="border rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                className="border border-gray-200 rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
               />
             </div>
           </Reveal>
@@ -396,7 +440,7 @@ export default function HomePage() {
             <RevealItem key={title}>
               <motion.div
                 whileHover={{ y: -4 }}
-                className="h-full border rounded-xl bg-white p-5 flex items-start gap-4 hover:shadow-lg hover:border-indigo-200 transition-shadow"
+                className="h-full border border-gray-200 rounded-xl bg-white p-5 flex items-start gap-4 hover:shadow-lg hover:border-indigo-200 transition-shadow"
               >
                 <div className="bg-indigo-50 text-indigo-600 rounded-lg p-2.5 shrink-0">
                   <Icon size={22} />
@@ -467,7 +511,7 @@ export default function HomePage() {
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b sticky top-0 bg-white">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 sticky top-0 bg-white">
                 <h2 className="font-semibold flex items-center gap-1.5">
                   <Sparkles size={16} className="text-indigo-600" /> AI Comparison
                 </h2>

@@ -43,7 +43,7 @@ export default function ProductCard({
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2, ease: "easeOut" }} className="h-full">
       <Link
         href={`/products/${product._id}`}
-        className="group relative border rounded-lg overflow-hidden bg-white hover:shadow-lg hover:border-indigo-200 transition-shadow flex flex-col h-full"
+        className="group relative border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-lg hover:border-indigo-200 transition-shadow flex flex-col h-full"
       >
         {onCompareToggle && (
           <label
