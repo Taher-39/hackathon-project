@@ -24,23 +24,23 @@ these in for you.
 
 | Homepage | Product Detail |
 |---|---|
-| ![Homepage](docs/screenshots/homepage.png) | ![Product detail](docs/screenshots/product-details.png) |
+| ![Homepage](./client/imgs/homepage.png) | ![Product detail](./client/imgs/product-details.png) |
 
 | Buyer Dashboard | Supplier Dashboard |
 |---|---|
-| ![Buyer dashboard](docs/screenshots/buyer-dashboard.png) | ![Supplier dashboard](docs/screenshots/supplier-dashboard.png) |
+| ![Buyer dashboard](./client/imgs/buyer-dashboard.png) | ![Supplier dashboard](./client/imgs/supplier-dashboard.png) |
 
 | New Arrival | Best Seller |
 |---|---|
-| ![New Arrival](docs/screenshots/new-arrival.png) | ![Best Seller](docs/screenshots/best-seller.png) |
+| ![New Arrival](./client/imgs/new-arrival.png) | ![Best Seller](./client/imgs/best-seller.png) |
 
 | Quote Request | Recently View Products |
 |---|---|
-| ![Quote Request](docs/screenshots/QuoteRequest.png) | ![Recently View Products](docs/screenshots/RecentlyViewProducts.png) |
+| ![Quote Request](./client/imgs/QuoteRequest.png) | ![Recently View Products](./client/imgs/RecentlyViewProducts.png) |
 
 | AI Assistant | Cart & Checkout |
 |---|---|
-| ![AI assistant](docs/screenshots/ai-assistant.png) | ![Checkout](docs/screenshots/checkout.png) |
+| ![AI assistant](./client/imgs/ai-assistant.png) | ![Checkout](./client/imgs/checkout.png) |
 
 ---
 
