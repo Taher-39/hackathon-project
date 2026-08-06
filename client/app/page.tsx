@@ -22,9 +22,10 @@ import {
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { api, apiErrorMessage } from "@/lib/api";
+import { useAssistantStore } from "@/lib/store";
 import ProductCard, { ProductSummary } from "@/components/ProductCard";
 import { ProductGridSkeleton } from "@/components/Skeleton";
-import Pagination from "@/components/Pagination";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import HeroCarousel, { HeroSlide } from "@/components/HeroCarousel";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
@@ -51,6 +52,7 @@ function categoryIcon(name: string) {
 }
 
 export default function HomePage() {
+  const setAssistantOpen = useAssistantStore((s) => s.setOpen);
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -59,6 +61,7 @@ export default function HomePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -147,37 +150,62 @@ export default function HomePage() {
     };
   }, []);
 
+  // Debounce only the live-typed search box; category/price changes below
+  // apply immediately since they don't fire on every keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setLoading(true);
-      const params: Record<string, string | number> = { page, limit: PAGE_SIZE };
-      if (search) params.search = search;
-      if (category) params.category = category;
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-
-      api
-        .get("/products", { params })
-        .then((res) => {
-          setProducts(res.data.data.products);
-          setPages(res.data.data.pages || 1);
-          setTotalProducts(res.data.data.total || 0);
-        })
-        .catch((err) => setError(apiErrorMessage(err)))
-        .finally(() => setLoading(false));
-    }, 300);
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timeout);
-  }, [search, category, minPrice, maxPrice, page]);
+  }, [search]);
 
-  function updateFilter(setter: (v: string) => void) {
-    return (value: string) => {
-      setter(value);
-      setPage(1);
+  // Any filter change starts a fresh result set from page 1 — infinite
+  // scroll then appends further pages as the user reaches the bottom.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, category, minPrice, maxPrice]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (page === 1) setLoading(true);
+    else setLoadingMore(true);
+
+    const params: Record<string, string | number> = { page, limit: PAGE_SIZE };
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (category) params.category = category;
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+
+    api
+      .get("/products", { params })
+      .then((res) => {
+        if (cancelled) return;
+        setProducts((prev) => (page === 1 ? res.data.data.products : [...prev, ...res.data.data.products]));
+        setPages(res.data.data.pages || 1);
+        setTotalProducts(res.data.data.total || 0);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(apiErrorMessage(err));
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        setLoadingMore(false);
+      });
+
+    return () => {
+      cancelled = true;
     };
+  }, [debouncedSearch, category, minPrice, maxPrice, page]);
+
+  function loadMoreProducts() {
+    if (loading || loadingMore || page >= pages) return;
+    setPage((p) => p + 1);
   }
 
+  const sentinelRef = useInfiniteScroll(loadMoreProducts, !loading && page < pages);
+
   function browseCategory(cat: string) {
-    updateFilter(setCategory)(cat);
+    setCategory(cat);
     scrollToBrowse();
   }
 
@@ -227,18 +255,18 @@ export default function HomePage() {
       {/* Trust / stats strip */}
       <section className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-3 gap-6 text-center sm:text-left">
-          <div>
+          <div className="text-center">
             <AnimatedCounter value={totalProducts || 15} className="text-2xl sm:text-3xl font-bold text-indigo-700" />
             <p className="text-xs sm:text-sm text-gray-500 mt-1">Products listed</p>
           </div>
-          <div>
+          <div className="text-center">
             <AnimatedCounter
               value={categories.length || 5}
               className="text-2xl sm:text-3xl font-bold text-indigo-700"
             />
             <p className="text-xs sm:text-sm text-gray-500 mt-1">Fabric categories</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-2xl sm:text-3xl font-bold text-indigo-700">24/7</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">AI sourcing assistant</p>
           </div>
@@ -327,14 +355,14 @@ export default function HomePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   value={search}
-                  onChange={(e) => updateFilter(setSearch)(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search products, categories..."
                   className="w-full border border-gray-200 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-shadow"
                 />
               </div>
               <select
                 value={category}
-                onChange={(e) => updateFilter(setCategory)(e.target.value)}
+                onChange={(e) => setCategory(e.target.value)}
                 className="border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
               >
                 <option value="">All categories</option>
@@ -346,14 +374,14 @@ export default function HomePage() {
               </select>
               <input
                 value={minPrice}
-                onChange={(e) => updateFilter(setMinPrice)(e.target.value)}
+                onChange={(e) => setMinPrice(e.target.value)}
                 placeholder="Min $"
                 type="number"
                 className="border border-gray-200 rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
               />
               <input
                 value={maxPrice}
-                onChange={(e) => updateFilter(setMaxPrice)(e.target.value)}
+                onChange={(e) => setMaxPrice(e.target.value)}
                 placeholder="Max $"
                 type="number"
                 className="border border-gray-200 rounded-md px-3 py-2 w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
@@ -381,7 +409,7 @@ export default function HomePage() {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.35, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.35, delay: Math.min(i % PAGE_SIZE, 8) * 0.03, ease: [0.22, 1, 0.36, 1] }}
                     >
                       <ProductCard
                         product={p}
@@ -392,7 +420,24 @@ export default function HomePage() {
                   ))}
                 </AnimatePresence>
               </motion.div>
-              <Pagination page={page} pages={pages} onChange={setPage} />
+
+              {/* Infinite scroll: this sentinel triggers the next page as it
+                  enters the viewport; it's invisible once nothing is loading
+                  and there are no more pages. */}
+              {page < pages && (
+                <div ref={sentinelRef} className="flex justify-center py-8">
+                  {loadingMore && (
+                    <span className="inline-flex items-center gap-2 text-sm text-gray-500">
+                      <Loader2 size={16} className="animate-spin" /> Loading more...
+                    </span>
+                  )}
+                </div>
+              )}
+              {page >= pages && totalProducts > PAGE_SIZE && (
+                <p className="text-center text-sm text-gray-400 py-8">
+                  You&apos;ve reached the end — {totalProducts} products total.
+                </p>
+              )}
             </>
           )}
         </div>
@@ -405,12 +450,12 @@ export default function HomePage() {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Need help sourcing?</h2>
             <p className="text-indigo-100 text-sm">Ask our AI assistant to find the right fabric for your order.</p>
           </div>
-          <Link
-            href="/assistant"
+          <button
+            onClick={() => setAssistantOpen(true)}
             className="shrink-0 inline-flex items-center gap-2 bg-white text-indigo-700 font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors shadow-lg shadow-black/10"
           >
             <Sparkles size={16} /> Ask the Assistant
-          </Link>
+          </button>
         </Reveal>
       </section>
 

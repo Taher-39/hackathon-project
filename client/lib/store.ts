@@ -125,6 +125,19 @@ export const useToastStore = create<ToastState>((set, get) => ({
   dismiss: (id) => set({ toasts: get().toasts.filter((t) => t.id !== id) }),
 }));
 
+// The AI assistant is a floating widget mounted once in the root layout
+// (see AssistantWidget), not a page. "Ask AI Assistant" links elsewhere in
+// the app open it via this store instead of navigating to a route.
+interface AssistantState {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+export const useAssistantStore = create<AssistantState>((set) => ({
+  open: false,
+  setOpen: (open) => set({ open }),
+}));
+
 export interface WishlistState {
   ids: string[];
   setIds: (ids: string[]) => void;

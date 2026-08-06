@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Send, Mic, Loader2 } from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
+import { useAssistantStore } from "@/lib/store";
 import ProductCard, { ProductSummary } from "@/components/ProductCard";
 
 interface ChatMessage {
@@ -18,7 +19,8 @@ const SUGGESTIONS = [
 ];
 
 export default function AssistantWidget() {
-  const [open, setOpen] = useState(false);
+  const open = useAssistantStore((s) => s.open);
+  const setOpen = useAssistantStore((s) => s.setOpen);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -82,7 +84,7 @@ export default function AssistantWidget() {
   return (
     <>
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(!open)}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
         className="fixed bottom-5 right-5 z-50 bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-700"
       >

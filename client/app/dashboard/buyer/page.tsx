@@ -3,15 +3,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { PackageSearch, ShoppingBag, ClipboardList, Clock, CheckCircle2, Wallet, Heart, Sparkles, FileText } from "lucide-react";
+import {
+  PackageSearch,
+  ShoppingBag,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  Wallet,
+  Heart,
+  Sparkles,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAssistantStore } from "@/lib/store";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import OrderStatusStepper from "@/components/OrderStatusStepper";
 import DashboardLayout from "@/components/DashboardLayout";
 import SpendChart from "@/components/SpendChart";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import AnimatedCounter from "@/components/motion/AnimatedCounter";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+
+const ORDERS_PAGE_SIZE = 10;
 
 interface Order {
   _id: string;
@@ -49,23 +63,45 @@ const TILES = [
 
 function BuyerDashboardContent() {
   const { user } = useAuthStore();
+  const setAssistantOpen = useAssistantStore((s) => s.setOpen);
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<BuyerStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
 
   useEffect(() => {
-    api
-      .get("/orders/mine")
-      .then((res) => setOrders(res.data.data.orders))
-      .catch((err) => setError(apiErrorMessage(err)))
-      .finally(() => setLoading(false));
+    if (page === 1) setLoading(true);
+    else setLoadingMore(true);
 
+    api
+      .get("/orders/mine", { params: { page, limit: ORDERS_PAGE_SIZE } })
+      .then((res) => {
+        setOrders((prev) => (page === 1 ? res.data.data.orders : [...prev, ...res.data.data.orders]));
+        setPages(res.data.data.pages || 1);
+      })
+      .catch((err) => setError(apiErrorMessage(err)))
+      .finally(() => {
+        setLoading(false);
+        setLoadingMore(false);
+      });
+  }, [page]);
+
+  useEffect(() => {
     api
       .get("/dashboard/buyer")
       .then((res) => setStats(res.data.data))
       .catch(() => {});
   }, []);
+
+  function loadMoreOrders() {
+    if (loading || loadingMore || page >= pages) return;
+    setPage((p) => p + 1);
+  }
+
+  const sentinelRef = useInfiniteScroll(loadMoreOrders, !loading && page < pages);
 
   return (
     <>
@@ -143,12 +179,12 @@ function BuyerDashboardContent() {
           >
             <FileText size={16} /> My Quote Requests
           </Link>
-          <Link
-            href="/assistant"
+          <button
+            onClick={() => setAssistantOpen(true)}
             className="inline-flex items-center gap-2 border px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
           >
             <Sparkles size={16} className="text-indigo-600" /> Ask AI Assistant
-          </Link>
+          </button>
         </div>
       </Reveal>
 
@@ -214,6 +250,19 @@ function BuyerDashboardContent() {
               </motion.div>
             ))}
           </AnimatePresence>
+
+          {page < pages && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              {loadingMore && (
+                <span className="inline-flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 size={16} className="animate-spin" /> Loading more orders...
+                </span>
+              )}
+            </div>
+          )}
+          {page >= pages && orders.length > ORDERS_PAGE_SIZE && (
+            <p className="text-center text-sm text-gray-400 py-6">You&apos;ve reached the end of your orders.</p>
+          )}
         </div>
       )}
     </>

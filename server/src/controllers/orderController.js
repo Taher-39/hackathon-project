@@ -86,8 +86,16 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.myOrders = async (req, res) => {
-  const orders = await Order.find({ buyerId: req.user._id }).sort({ createdAt: -1 });
-  return ok(res, { orders });
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+  const query = { buyerId: req.user._id };
+
+  const [orders, total] = await Promise.all([
+    Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+    Order.countDocuments(query),
+  ]);
+
+  return ok(res, { orders, total, page: Number(page), pages: Math.ceil(total / Number(limit)) || 1 });
 };
 
 exports.getOrder = async (req, res) => {
