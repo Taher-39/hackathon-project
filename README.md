@@ -1,55 +1,136 @@
-## 1. Project Summary
+# TextileHub — B2B Textile Marketplace
 
-A B2B Textile Marketplace prototype connecting **Buyers** and **Suppliers**.
-Goal: demonstrate the core marketplace workflow end-to-end with clean architecture,
-good UX, and scalable structure — not every possible business feature.
+A B2B marketplace prototype connecting textile **buyers** and **suppliers** — discover fabrics,
+compare pricing and MOQ, place bulk orders, and track fulfillment end-to-end, with an AI
+assistant that searches live inventory instead of giving canned answers.
+
+## Live Demo
+
+- **Client:** https://textilehub.vercel.app
+- **Server API:** https://textilehub-server.vercel.app
+
+### Demo accounts
+
+| Role     | Email                          | Password    |
+|----------|---------------------------------|-------------|
+| Buyer    | demo.buyer@textilehub.com       | Demo@1234   |
+| Supplier | demo.supplier@textilehub.com    | Demo@1234   |
+
+Both accounts are pre-onboarded with real seeded orders/products, so you can log in and explore
+immediately instead of registering from scratch. The demo login buttons on the `/login` page fill
+these in for you.
+
+## Screenshots
+
+| Homepage | Product Detail |
+|---|---|
+| ![Homepage](docs/screenshots/homepage.png) | ![Product detail](docs/screenshots/product-detail.png) |
+
+| Buyer Dashboard | Supplier Dashboard |
+|---|---|
+| ![Buyer dashboard](docs/screenshots/buyer-dashboard.png) | ![Supplier dashboard](docs/screenshots/supplier-dashboard.png) |
+
+| AI Assistant | Cart & Checkout |
+|---|---|
+| ![AI assistant](docs/screenshots/ai-assistant.png) | ![Checkout](docs/screenshots/checkout.png) |
 
 ---
 
-## 2. Repository Structure
+## Features
 
-Two separate folders, two separate git repos:
+### Buyer
+- Register/login with email verification, forgot/reset password (email via Nodemailer)
+- Multi-step onboarding wizard (business type, categories, fabric preferences, order scale)
+- Marketplace discovery: search, category/price filters, pagination, "shop by category" grid
+- Product detail: multi-image gallery with lightbox, supplier details card, ratings & reviews,
+  same-category "similar products", AI Q&A about the specific product, and bulk-pricing tiers
+  (per-unit price adjusts automatically for the quantity you enter)
+- Wishlist (heart-toggle on any product card, dedicated page + dashboard link)
+- "Recently viewed" row on the homepage and product pages — scoped to your own account, so
+  switching accounts on the same browser never shows someone else's history
+- Compare up to 4 products side-by-side with an AI-written comparison
+- Request a custom-price quote (RFQ) on any product — a lightweight negotiation thread separate
+  from checkout — then track the supplier's response and accept/decline it from the dashboard
+- Browse a supplier's public storefront: verified badge, aggregate rating, and full catalog
+- Cart & checkout with stock/MOQ validation (rejects over-stock quantities with a toast)
+- Order tracking with a visual status stepper (Pending → Accepted → Preparing → Ready for
+  Dispatch → Completed) and in-app notifications on status changes
+- Dashboard: order history, saved address, password change, wishlist, quotes — all behind a
+  responsive sidebar (desktop) / tab bar (mobile)
+
+### Supplier
+- Product CRUD with multi-image upload (Cloudinary), stock/MOQ management, and bulk-pricing tiers
+- Quick +/- stock adjustment directly from the product list (no modal needed)
+- Incoming order management with status updates (triggers buyer notifications)
+- Respond to incoming buyer quote requests (RFQ) with a custom price and message; buyer is
+  notified and can accept/decline
+- Dashboard with live stats (products, pending orders, low-stock alerts) and an 8-week
+  orders/revenue chart
+- Verified-supplier badge (shown on product pages, the public storefront, and the dashboard)
+
+### AI Marketplace Assistant
+- Floating chat widget with natural-language search + voice input, grounded only in live DB data
+- Personalized recommendations from the buyer's onboarding profile
+- Product Q&A and side-by-side comparison, both backed by real product records — never invented
+
+### Platform-wide
+- JWT access + refresh token rotation (httpOnly refresh cookie)
+- Toast notifications, skeleton loaders, responsive design throughout
+- Footer with quick links, About Us, Terms & Conditions, and Privacy Policy pages
+
+---
+
+## Tech Stack
+
+**Frontend** — Next.js (App Router) · Tailwind CSS · React Hook Form + Zod · Zustand · lucide-react
+
+**Backend** — Node.js + Express · MongoDB + Mongoose · JWT (access + refresh) · Cloudinary ·
+Nodemailer · Google Gemini (AI assistant)
+
+**Deployment** — Client on Vercel; server supports both a traditional Node process (Render/Railway,
+via `server.js`) and Vercel serverless functions (via `api/index.js` + `vercel.json`).
+
+---
+
+## Repository Structure
 
 ```
 project-root/
 ├── client/     # Next.js + Tailwind CSS (frontend)
 ├── server/     # Express.js + MongoDB (backend)
+└── docs/       # README assets (screenshots)
+```
 
+## Local Setup
 
-## 3. Tech Stack
+### Server
 
-**Frontend**
-- Next.js (App Router, latest stable)
-- Tailwind CSS
-- React Hook Form + Zod (form validation)
-- TanStack Query or Zustand for state/data fetching
-- lucide-react for icons
+```bash
+cd server
+cp .env.example .env   # fill in your own MongoDB/Cloudinary/Gemini/Gmail credentials
+npm install
+npm run seed:demo      # optional: creates the demo buyer/supplier + sample catalog
+npm run dev            # http://localhost:5000
+```
 
-**Backend**
-- Node.js + Express.js
-- MongoDB + Mongoose
-- JWT authentication (access + refresh token pattern)
-- Role-based middleware (`buyer` / `supplier`)
-- cloud storage (Cloudinary) for product image uploads
+### Client
 
+```bash
+cd client
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL to your running server
+npm install
+npm run dev             # http://localhost:3000
+```
 
-**AI Assistant (bonus, build last)**
-- Prefer a Hugging Face hosted model per JD; Anthropic API is an acceptable fallback if HF integration blocks progress — note the substitution clearly in the demo video.
-- Must use live marketplace DB data for recommendations/search — no hardcoded responses.
-- Traditional search/filter/browse must keep working with or without the AI assistant.
-
----
-
-## 4. Non-Negotiable Workflow Rules
-
-1. Build **one phase at a time**, in the order defined in Section 5. Do not jump ahead.
-2. After finishing a phase: **test it → if it works, commit → then start the next phase.**
-3. **Never commit broken or non-functional code.** If something fails, fix it before committing.
-4. One feature = one commit. Do not bundle unrelated changes together.
-5. Use **conventional commit messages**: `feat:`, `fix:`, `refactor:`, `chore:`, `test:`.
-6. Keep code modular and reusable — shared UI components, shared API response helpers, no copy-pasted logic.
-7. Every form needs real validation (required fields, types, ranges) — not just UI placeholders.
-8. Mobile-first responsive design on every screen, not just desktop.
-9. After every phase touching data (products/orders), **create at least one real sample record** through the actual UI (not seeded directly in DB) to verify the full path: UI → API → DB → UI.
+See each folder's `.env.example` for the full list of required environment variables.
 
 ---
+
+## Definition of Done
+
+- [x] Buyer: register → onboard → browse/search/filter → view product → add to cart → checkout → track order in dashboard
+- [x] Supplier: register → onboard → add product → see it live on marketplace → receive order → update status
+- [x] All core screens are responsive (mobile/tablet/desktop)
+- [x] No broken commits in git history
+- [x] `client/` deployed on Vercel, `server/` deployed and connected
+- [ ] Demo video recorded (script ready — see `VIDEO_SCRIPT.txt`)
