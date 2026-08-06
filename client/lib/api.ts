@@ -4,6 +4,12 @@ import { useAuthStore } from "./store";
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
   withCredentials: true,
+  // Without a timeout, a slow/hung request (e.g. a cold-starting free-tier
+  // backend) just sits pending forever — it never rejects, so callers that
+  // retry on failure (like the homepage's category-list loader) never get
+  // the chance to. Bounding every request lets that retry/fallback logic
+  // actually run instead of leaving the UI stuck on a loading state.
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {

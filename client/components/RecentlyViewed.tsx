@@ -16,6 +16,13 @@ export default function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   const userId = useAuthStore((s) => s.user?._id);
 
   useEffect(() => {
+    // Signed-out visitors share no account, so there's no "their own" history
+    // to show — skip the fetch and hide the section entirely rather than
+    // falling back to the shared guest bucket.
+    if (!userId) {
+      setProducts([]);
+      return;
+    }
     const ids = getRecentlyViewedIds().filter((id) => id !== excludeId);
     if (!ids.length) {
       setProducts([]);
@@ -32,7 +39,7 @@ export default function RecentlyViewed({ excludeId }: { excludeId?: string }) {
       .catch(() => {});
   }, [excludeId, userId]);
 
-  if (!products.length) return null;
+  if (!userId || !products.length) return null;
 
   return (
     <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

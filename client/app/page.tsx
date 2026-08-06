@@ -242,7 +242,7 @@ export default function HomePage() {
       image:
         "https://images.unsplash.com/photo-1686806374120-e7ae3f19801d?w=1600&h=1000&q=80&auto=format&fit=crop",
       primaryLabel: "Ask the Assistant",
-      primaryHref: "/assistant",
+      onPrimaryClick: () => setAssistantOpen(true),
       secondaryHref: "/register",
       secondaryLabel: "Join as Supplier",
     },
@@ -274,12 +274,30 @@ export default function HomePage() {
       </section>
 
       {/* Category section */}
+      {/* This sits right at the top of the page, so its reveal is tied
+          directly to categoriesLoading (animate) rather than scroll position
+          (whileInView, via Reveal/RevealGroup elsewhere on this page). A
+          scroll-gated reveal here raced against the categories fetch and
+          could leave the buttons in the DOM with opacity: 0 — present but
+          invisible, and unrecoverable without a scroll event to re-trigger
+          it. Driving the animation off real data state instead means it
+          always resolves to visible once categories arrive, regardless of
+          fetch timing or scroll position. */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-        <Reveal>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
           <h2 className="text-2xl font-bold mb-1">Shop by category</h2>
           <p className="text-gray-500 text-sm mb-6">Jump straight to the fabric type you need.</p>
-        </Reveal>
-        <RevealGroup className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        </motion.div>
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4"
+          initial="hidden"
+          animate={categoriesLoading ? "hidden" : "show"}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+        >
           {categoriesLoading
             ? Array.from({ length: 6 }).map((_, i) => (
                 <div
@@ -290,7 +308,13 @@ export default function HomePage() {
             : categories.slice(0, 10).map((cat) => {
                 const Icon = categoryIcon(cat);
                 return (
-                  <RevealItem key={cat}>
+                  <motion.div
+                    key={cat}
+                    variants={{
+                      hidden: { opacity: 0, y: 16 },
+                      show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+                    }}
+                  >
                     <motion.button
                       onClick={() => browseCategory(cat)}
                       whileHover={{ y: -4 }}
@@ -302,10 +326,10 @@ export default function HomePage() {
                       </div>
                       <span className="text-sm font-medium text-gray-800 text-center">{cat}</span>
                     </motion.button>
-                  </RevealItem>
+                  </motion.div>
                 );
               })}
-        </RevealGroup>
+        </motion.div>
       </section>
 
       {bestSellers.length > 0 && (
@@ -347,7 +371,14 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
         <div ref={browseRef} id="browse" className="pt-2 scroll-mt-20">
           <Reveal>
-            <h2 className="text-2xl font-bold mb-4">Browse all products</h2>
+            <div className="flex items-baseline justify-between gap-2 mb-4">
+              <h2 className="text-2xl font-bold">Browse all products</h2>
+              {!loading && totalProducts > 0 && (
+                <span className="text-sm text-gray-500">
+                  Showing {products.length} of {totalProducts}
+                </span>
+              )}
+            </div>
           </Reveal>
           <Reveal delay={0.05}>
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
