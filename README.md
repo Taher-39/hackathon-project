@@ -24,11 +24,19 @@ these in for you.
 
 | Homepage | Product Detail |
 |---|---|
-| ![Homepage](docs/screenshots/homepage.png) | ![Product detail](docs/screenshots/product-detail.png) |
+| ![Homepage](docs/screenshots/homepage.png) | ![Product detail](docs/screenshots/product-details.png) |
 
 | Buyer Dashboard | Supplier Dashboard |
 |---|---|
 | ![Buyer dashboard](docs/screenshots/buyer-dashboard.png) | ![Supplier dashboard](docs/screenshots/supplier-dashboard.png) |
+
+| New Arrival | Best Seller |
+|---|---|
+| ![New Arrival](docs/screenshots/new-arrival.png) | ![Best Seller](docs/screenshots/best-seller.png) |
+
+| Quote Request | Recently View Products |
+|---|---|
+| ![Quote Request](docs/screenshots/QuoteRequest.png) | ![Recently View Products](docs/screenshots/RecentlyViewProducts.png) |
 
 | AI Assistant | Cart & Checkout |
 |---|---|
@@ -126,11 +134,3 @@ See each folder's `.env.example` for the full list of required environment varia
 
 ---
 
-## Definition of Done
-
-- [x] Buyer: register → onboard → browse/search/filter → view product → add to cart → checkout → track order in dashboard
-- [x] Supplier: register → onboard → add product → see it live on marketplace → receive order → update status
-- [x] All core screens are responsive (mobile/tablet/desktop)
-- [x] No broken commits in git history
-- [x] `client/` deployed on Vercel, `server/` deployed and connected
-- [ ] Demo video recorded (script ready — see `VIDEO_SCRIPT.txt`)
