@@ -9,6 +9,8 @@ import { ProductGridSkeleton } from "@/components/Skeleton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Reveal } from "@/components/motion/Reveal";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import axios from "axios";
 
 interface Product {
   _id: string;
@@ -67,6 +69,8 @@ function SupplierProductsContent() {
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<Product | null>(null);
+  const [deleteWorking, setDeleteWorking] = useState(false);
 
   // A free-tier backend waking from a cold start can easily take longer than
   // the 10s request timeout, which used to just dead-end on a raw "timeout of
@@ -93,7 +97,7 @@ function SupplierProductsContent() {
       });
   }
 
-  useEffect(() => loadProducts(), []);
+  useEffect(loadProducts, []);
 
   function openCreate() {
     setEditing(null);
@@ -245,14 +249,43 @@ function SupplierProductsContent() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this product?")) return;
+  // Retry delays for delete, mirroring loadProducts' cold-start backoff.
+  const DELETE_RETRY_DELAYS_MS = [2000, 4000, 6000];
+
+  function requestDelete(p: Product) {
+    setDeleting(p);
+  }
+
+  async function confirmDelete(attempt = 0) {
+    if (!deleting) return;
+    setDeleteWorking(true);
     try {
-      await api.delete(`/products/${id}`);
+      // A cold-starting backend can genuinely take longer than the default
+      // 10s to wake up and respond, so give this its own longer timeout.
+      await api.delete(`/products/${deleting._id}`, { timeout: 20000 });
       toast("Product deleted", "success");
+      setDeleting(null);
+      setDeleteWorking(false);
       loadProducts();
     } catch (err) {
+      // If a retry lands after the delete actually went through server-side
+      // (the first attempt's response just never made it back in time), the
+      // product is already gone — treat "not found" on a retry as success
+      // instead of showing a confusing error.
+      if (attempt > 0 && axios.isAxiosError(err) && err.response?.status === 404) {
+        toast("Product deleted", "success");
+        setDeleting(null);
+        setDeleteWorking(false);
+        loadProducts();
+        return;
+      }
+      const isTimeoutOrNetwork = axios.isAxiosError(err) && (err.code === "ECONNABORTED" || !err.response);
+      if (isTimeoutOrNetwork && attempt < DELETE_RETRY_DELAYS_MS.length) {
+        setTimeout(() => confirmDelete(attempt + 1), DELETE_RETRY_DELAYS_MS[attempt]);
+        return;
+      }
       toast(apiErrorMessage(err), "error");
+      setDeleteWorking(false);
     }
   }
 
@@ -380,7 +413,7 @@ function SupplierProductsContent() {
                       {p.status === "available" ? "Mark out of stock" : "Mark in stock"}
                     </button>
                     <button
-                      onClick={() => handleDelete(p._id)}
+                      onClick={() => requestDelete(p)}
                       className="text-red-600 border rounded-md px-2 hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={14} />
@@ -715,6 +748,17 @@ function SupplierProductsContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title={`Delete ${deleting?.name || "this product"}?`}
+        description="This can't be undone. Buyers will no longer be able to find or order it."
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleteWorking}
+        onConfirm={() => confirmDelete()}
+        onCancel={() => setDeleting(null)}
+      />
     </>
   );
 }
