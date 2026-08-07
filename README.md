@@ -28,13 +28,17 @@ can suspend it or change its role, so it always stays available for grading/demo
 |---|---|
 | ![Homepage](./client/imgs/homepage.png) | ![Product detail](./client/imgs/product-details.png) |
 
+| New Arrival | Best Seller |
+|---|---|
+| ![New Arrival](./client/imgs/new-arrival.png) | ![Best Seller](./client/imgs/best-seller.png) |
+
 | Buyer Dashboard | Supplier Dashboard |
 |---|---|
 | ![Buyer dashboard](./client/imgs/buyer-dashboard.png) | ![Supplier dashboard](./client/imgs/supplier-dashboard.png) |
 
-| New Arrival | Best Seller |
+| Admin Dashboard | AI Assistant on Onboarding |
 |---|---|
-| ![New Arrival](./client/imgs/new-arrival.png) | ![Best Seller](./client/imgs/best-seller.png) |
+| ![Admin Dashboard](./client/imgs/admin-dashboard.png) | ![AI Assistant on Onboarding](./client/imgs/ai-assistant-onboarding.png) |
 
 | Quote Request | Recently View Products |
 |---|---|
