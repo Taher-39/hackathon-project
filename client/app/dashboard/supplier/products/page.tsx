@@ -377,231 +377,317 @@ function SupplierProductsContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto"
+            className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-white rounded-xl max-w-xl w-full p-6 my-8 shadow-2xl"
+              className="bg-white rounded-xl max-w-xl w-full my-4 sm:my-8 shadow-2xl flex flex-col max-h-[calc(100dvh-2rem)] overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold">{editing ? "Edit Product" : "Add Product"}</h2>
-                <button onClick={() => setShowForm(false)} aria-label="Close">
-                  <X size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <input
-                  placeholder="Product name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className={inputClass}
-                />
-                <input
-                  placeholder="Category"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className={inputClass}
-                />
-                <textarea
-                  placeholder="Description"
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className={inputClass}
-                  rows={3}
-                />
-                <input
-                  placeholder="Colors, comma separated (e.g. Navy, White, Charcoal) *"
-                  value={form.colors}
-                  onChange={(e) => setForm({ ...form, colors: e.target.value })}
-                  className={inputClass}
-                  required
-                />
-                <input
-                  placeholder="Fabric type"
-                  value={form.fabricType}
-                  onChange={(e) => setForm({ ...form, fabricType: e.target.value })}
-                  className={inputClass}
-                />
-                <input
-                  placeholder="Specifications"
-                  value={form.specifications}
-                  onChange={(e) => setForm({ ...form, specifications: e.target.value })}
-                  className={inputClass}
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    className={inputClass}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Stock"
-                    value={validSizeRows.length > 0 ? sizesStockTotal : form.stock}
-                    disabled={validSizeRows.length > 0}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    className={`${inputClass} ${validSizeRows.length > 0 ? "bg-gray-50 text-gray-500" : ""}`}
-                  />
-                  <input
-                    type="number"
-                    placeholder="MOQ"
-                    value={form.moq}
-                    onChange={(e) => setForm({ ...form, moq: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-                {validSizeRows.length > 0 && (
-                  <p className="text-xs text-gray-400 -mt-2">Stock is the sum of the sizes below.</p>
-                )}
-
-                <div className="border rounded-md p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium">Sizes (optional)</label>
-                    <button
-                      type="button"
-                      onClick={addSizeRow}
-                      className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
-                    >
-                      <Plus size={12} /> Add size
-                    </button>
-                  </div>
-                  {sizeRows.length === 0 ? (
-                    <p className="text-xs text-gray-400">
-                      No sizes — this product sells by overall stock only. Add sizes if buyers must pick one (e.g.
-                      apparel: S/M/L).
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {sizeRows.map((row, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            placeholder="Label (e.g. M)"
-                            value={row.label}
-                            onChange={(e) => updateSizeRow(i, "label", e.target.value)}
-                            className="border rounded-md px-2 py-1.5 text-sm flex-1"
-                          />
-                          <input
-                            type="number"
-                            placeholder="Stock"
-                            min={0}
-                            value={row.stock}
-                            onChange={(e) => updateSizeRow(i, "stock", e.target.value)}
-                            className="border rounded-md px-2 py-1.5 text-sm w-24"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeSizeRow(i)}
-                            aria-label="Remove size"
-                            className="text-red-500 hover:text-red-700 shrink-0"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                {/* Header (fixed) */}
+                <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b shrink-0">
+                  <h2 className="text-lg font-bold">{editing ? "Edit Product" : "Add Product"}</h2>
+                  <button type="button" onClick={() => setShowForm(false)} aria-label="Close">
+                    <X size={20} />
+                  </button>
                 </div>
 
-                <div className="border rounded-md p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium">Bulk pricing tiers (optional)</label>
-                    <button
-                      type="button"
-                      onClick={addTierRow}
-                      className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
-                    >
-                      <Plus size={12} /> Add tier
-                    </button>
-                  </div>
-                  {tierRows.length === 0 ? (
-                    <p className="text-xs text-gray-400">
-                      No tiers — buyers always pay the base price above. Add tiers to discount larger orders (e.g.
-                      100+ units at $4.50).
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {tierRows.map((row, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            placeholder="Min qty"
-                            min={1}
-                            value={row.minQty}
-                            onChange={(e) => updateTierRow(i, "minQty", e.target.value)}
-                            className="border rounded-md px-2 py-1.5 text-sm flex-1"
-                          />
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Price / unit"
-                            min={0}
-                            value={row.price}
-                            onChange={(e) => updateTierRow(i, "price", e.target.value)}
-                            className="border rounded-md px-2 py-1.5 text-sm w-28"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeTierRow(i)}
-                            aria-label="Remove tier"
-                            className="text-red-500 hover:text-red-700 shrink-0"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {editing && (
+                {/* Body (scrollable) */}
+                <div className="overflow-y-auto flex-1 min-h-0 px-5 sm:px-6 py-4 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Current images</label>
-                    {existingImages.length === 0 ? (
-                      <p className="text-sm text-gray-400">No images yet — add some below.</p>
+                    <label htmlFor="p-name" className="block text-sm font-medium mb-1">
+                      Product name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="p-name"
+                      placeholder="e.g. Premium Cotton Twill"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="p-category" className="block text-sm font-medium mb-1">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="p-category"
+                      placeholder="e.g. Fabrics"
+                      value={form.category}
+                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="p-description" className="block text-sm font-medium mb-1">
+                      Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="p-description"
+                      placeholder="Describe the product"
+                      value={form.description}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className={inputClass}
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="p-colors" className="block text-sm font-medium mb-1">
+                      Colors <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="p-colors"
+                      placeholder="Comma separated, e.g. Navy, White, Charcoal"
+                      value={form.colors}
+                      onChange={(e) => setForm({ ...form, colors: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="p-fabric" className="block text-sm font-medium mb-1">
+                      Fabric type
+                    </label>
+                    <input
+                      id="p-fabric"
+                      placeholder="e.g. 100% Cotton"
+                      value={form.fabricType}
+                      onChange={(e) => setForm({ ...form, fabricType: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="p-specs" className="block text-sm font-medium mb-1">
+                      Specifications
+                    </label>
+                    <input
+                      id="p-specs"
+                      placeholder="e.g. 180 GSM, 58 inch width"
+                      value={form.specifications}
+                      onChange={(e) => setForm({ ...form, specifications: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label htmlFor="p-price" className="block text-sm font-medium mb-1">
+                        Price <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="p-price"
+                        type="number"
+                        placeholder="0.00"
+                        value={form.price}
+                        onChange={(e) => setForm({ ...form, price: e.target.value })}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="p-stock" className="block text-sm font-medium mb-1">
+                        Stock {validSizeRows.length === 0 && <span className="text-red-500">*</span>}
+                      </label>
+                      <input
+                        id="p-stock"
+                        type="number"
+                        placeholder="0"
+                        value={validSizeRows.length > 0 ? sizesStockTotal : form.stock}
+                        disabled={validSizeRows.length > 0}
+                        onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                        className={`${inputClass} ${validSizeRows.length > 0 ? "bg-gray-50 text-gray-500" : ""}`}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="p-moq" className="block text-sm font-medium mb-1">
+                        MOQ
+                      </label>
+                      <input
+                        id="p-moq"
+                        type="number"
+                        placeholder="1"
+                        value={form.moq}
+                        onChange={(e) => setForm({ ...form, moq: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  {validSizeRows.length > 0 && (
+                    <p className="text-xs text-gray-400 -mt-2">Stock is the sum of the sizes below.</p>
+                  )}
+
+                  <div className="border rounded-md p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium">Sizes (optional)</label>
+                      <button
+                        type="button"
+                        onClick={addSizeRow}
+                        className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
+                      >
+                        <Plus size={12} /> Add size
+                      </button>
+                    </div>
+                    {sizeRows.length === 0 ? (
+                      <p className="text-xs text-gray-400">
+                        No sizes — this product sells by overall stock only. Add sizes if buyers must pick one (e.g.
+                        apparel: S/M/L).
+                      </p>
                     ) : (
-                      <div className="grid grid-cols-4 gap-2">
-                        {existingImages.map((img) => (
-                          <div key={img.publicId || img.url} className="relative group aspect-square">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={img.url}
-                              alt="Product"
-                              className="w-full h-full object-cover rounded-md border"
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 px-0.5">
+                          <span className="flex-1">Label</span>
+                          <span className="w-24">Stock</span>
+                          <span className="w-4" />
+                        </div>
+                        {sizeRows.map((row, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <input
+                              aria-label={`Size ${i + 1} label`}
+                              placeholder="e.g. M"
+                              value={row.label}
+                              onChange={(e) => updateSizeRow(i, "label", e.target.value)}
+                              className="border rounded-md px-2 py-1.5 text-sm flex-1"
+                            />
+                            <input
+                              aria-label={`Size ${i + 1} stock`}
+                              type="number"
+                              placeholder="Stock"
+                              min={0}
+                              value={row.stock}
+                              onChange={(e) => updateSizeRow(i, "stock", e.target.value)}
+                              className="border rounded-md px-2 py-1.5 text-sm w-24"
                             />
                             <button
                               type="button"
-                              onClick={() => removeExistingImage(img)}
-                              aria-label="Remove image"
-                              className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-0.5 shadow hover:bg-red-700 transition-colors"
+                              onClick={() => removeSizeRow(i)}
+                              aria-label="Remove size"
+                              className="text-red-500 hover:text-red-700 shrink-0"
                             >
-                              <X size={12} />
+                              <X size={16} />
                             </button>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {editing ? "Add more images" : "Images"}
-                  </label>
-                  <input type="file" multiple accept="image/*" onChange={(e) => setFiles(e.target.files)} />
+
+                  <div className="border rounded-md p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium">Bulk pricing tiers (optional)</label>
+                      <button
+                        type="button"
+                        onClick={addTierRow}
+                        className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
+                      >
+                        <Plus size={12} /> Add tier
+                      </button>
+                    </div>
+                    {tierRows.length === 0 ? (
+                      <p className="text-xs text-gray-400">
+                        No tiers — buyers always pay the base price above. Add tiers to discount larger orders (e.g.
+                        100+ units at $4.50).
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 px-0.5">
+                          <span className="flex-1">Min qty</span>
+                          <span className="w-28">Price / unit</span>
+                          <span className="w-4" />
+                        </div>
+                        {tierRows.map((row, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <input
+                              aria-label={`Tier ${i + 1} minimum quantity`}
+                              type="number"
+                              placeholder="Min qty"
+                              min={1}
+                              value={row.minQty}
+                              onChange={(e) => updateTierRow(i, "minQty", e.target.value)}
+                              className="border rounded-md px-2 py-1.5 text-sm flex-1"
+                            />
+                            <input
+                              aria-label={`Tier ${i + 1} price per unit`}
+                              type="number"
+                              step="0.01"
+                              placeholder="Price / unit"
+                              min={0}
+                              value={row.price}
+                              onChange={(e) => updateTierRow(i, "price", e.target.value)}
+                              className="border rounded-md px-2 py-1.5 text-sm w-28"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeTierRow(i)}
+                              aria-label="Remove tier"
+                              className="text-red-500 hover:text-red-700 shrink-0"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {editing && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Current images</label>
+                      {existingImages.length === 0 ? (
+                        <p className="text-sm text-gray-400">No images yet — add some below.</p>
+                      ) : (
+                        <div className="grid grid-cols-4 gap-2">
+                          {existingImages.map((img) => (
+                            <div key={img.publicId || img.url} className="relative group aspect-square">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={img.url}
+                                alt="Product"
+                                className="w-full h-full object-cover rounded-md border"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeExistingImage(img)}
+                                aria-label="Remove image"
+                                className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-0.5 shadow hover:bg-red-700 transition-colors"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <label htmlFor="p-images" className="block text-sm font-medium mb-1">
+                      {editing ? "Add more images" : "Images"}
+                    </label>
+                    <input
+                      id="p-images"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => setFiles(e.target.files)}
+                      className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                    />
+                  </div>
                 </div>
 
-                {formError && <p className="text-red-600 text-sm">{formError}</p>}
-
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 disabled:opacity-60 transition-colors"
-                >
-                  {saving ? "Saving..." : editing ? "Save changes" : "Create product"}
-                </button>
+                {/* Footer (fixed) */}
+                <div className="shrink-0 border-t px-5 sm:px-6 py-4 space-y-3">
+                  {formError && <p className="text-red-600 text-sm">{formError}</p>}
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 disabled:opacity-60 transition-colors"
+                  >
+                    {saving ? "Saving..." : editing ? "Save changes" : "Create product"}
+                  </button>
+                </div>
               </form>
             </motion.div>
           </motion.div>

@@ -508,14 +508,18 @@ async function upsertUser(def) {
     user = await User.create(def);
     console.log(`Created ${def.role} account: ${def.email}`);
   } else {
-    // Re-syncing an already-existing seed account: keep protection flags in
-    // step with the definition above even across repeated `seed:demo` runs
-    // (e.g. this field didn't exist on an account created before it was added).
-    if (def.isProtected !== undefined && user.isProtected !== def.isProtected) {
-      user.isProtected = def.isProtected;
-      await user.save();
-    }
-    console.log(`${def.role} account already exists: ${def.email}`);
+    // Re-syncing an already-existing seed account: force it back to the
+    // documented credentials/state on every `seed:demo` run. Without this,
+    // the "Quick demo access" login buttons on the client silently break the
+    // moment anyone tests Change Password / forgot-password against a demo
+    // account, or an admin suspends one — since re-seeding previously only
+    // touched isProtected, the account would exist but no longer accept the
+    // password printed at the end of this script.
+    user.password = def.password; // pre-save hook re-hashes since this always differs from the stored bcrypt hash
+    if (def.isProtected !== undefined) user.isProtected = def.isProtected;
+    if (user.status !== "active") user.status = "active";
+    await user.save();
+    console.log(`${def.role} account already exists: ${def.email} (credentials re-synced)`);
   }
   return user;
 }
