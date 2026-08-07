@@ -111,10 +111,9 @@ can suspend it or change its role, so it always stays available for grading/demo
   action (who did what, to whom, when)
 
 ### AI Marketplace Assistant
-- Powered by Google Gemini (`gemini-2.5-flash`) — the brief's preferred option was a custom
-  Hugging Face LLM; the backend will use one automatically if `HUGGINGFACE_API_KEY`/
-  `HUGGINGFACE_MODEL` are set (see `server/.env.example`), and falls back to Gemini otherwise,
-  which is how this submission is configured and demoed
+- Powered by a custom Hugging Face LLM — the brief's preferred option, and how this submission is configured and
+  demoed. `HUGGINGFACE_API_KEY`/`HUGGINGFACE_MODEL` (see `server/.env.example`) select the model;
+  Google Gemini (`gemini-2.5-flash`) remains as an automatic fallback if those two are unset
 - Floating chat widget with natural-language search + voice input, grounded only in live DB data
 - Personalized recommendations from the buyer's onboarding profile
 - Product Q&A and side-by-side comparison, both backed by real product records — never invented
@@ -137,8 +136,7 @@ can suspend it or change its role, so it always stays available for grading/demo
 **Frontend** — Next.js (App Router) · Tailwind CSS · React Hook Form + Zod · Zustand · lucide-react
 
 **Backend** — Node.js + Express · MongoDB + Mongoose · JWT (access + refresh) · Cloudinary ·
-Nodemailer · Google Gemini (AI assistant + onboarding autofill; optional custom Hugging Face
-model override)
+Nodemailer · Hugging Face LLM (AI assistant + onboarding autofill; Google Gemini as fallback)
 
 **Deployment** — Client on Vercel; server supports both a traditional Node process (Render/Railway,
 via `server.js`) and Vercel serverless functions (via `api/index.js` + `vercel.json`).
