@@ -9,6 +9,10 @@ const orderItemSchema = new mongoose.Schema(
     size: String,
     price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
+    // Charged only when this supplier confirms the order, never at buyer checkout.
+    platformFee: { type: Number, default: 0 },
+    supplierNetAmount: { type: Number, default: 0 },
+    supplierConfirmedAt: Date,
   },
   { _id: false }
 );

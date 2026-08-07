@@ -65,7 +65,7 @@ export default function OrdersChart({ data }: { data: WeekPoint[] }) {
                 width={barWidth}
                 height={Math.max(barHeight, 2)}
                 rx={3}
-                className={isHovered ? "fill-indigo-700" : "fill-indigo-500"}
+                className={isHovered ? "fill-teal-700" : "fill-teal-500"}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               />

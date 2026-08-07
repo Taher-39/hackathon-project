@@ -95,6 +95,16 @@ exports.login = async (req, res) => {
   const match = await user.comparePassword(password);
   if (!match) return fail(res, "Invalid credentials", 401);
 
+  if (user.status === "suspended") {
+    return fail(
+      res,
+      user.suspendedReason
+        ? `Your account has been suspended: ${user.suspendedReason}`
+        : "Your account has been suspended. Contact support for details.",
+      403
+    );
+  }
+
   const accessToken = issueTokens(res, user);
   return ok(res, { user: user.toSafeObject(), token: accessToken }, "Logged in successfully");
 };

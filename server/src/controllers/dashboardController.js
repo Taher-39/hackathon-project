@@ -19,6 +19,18 @@ exports.supplierStats = async (req, res) => {
   const recentOrders = orders.slice(0, 5);
   const ordersPerWeek = buildWeeklySeries(orders, supplierId, 8);
 
+  // Platform fee is only charged on this supplier's own items, and only once
+  // they've confirmed (Accepted) the order — see orderController.updateOrderStatus.
+  let confirmedGross = 0;
+  let platformFeesPaid = 0;
+  orders.forEach((order) => {
+    order.items.forEach((item) => {
+      if (String(item.supplierId) !== String(supplierId) || !item.supplierConfirmedAt) return;
+      confirmedGross += item.price * item.quantity;
+      platformFeesPaid += item.platformFee || 0;
+    });
+  });
+
   return ok(res, {
     totalProducts,
     activeProducts,
@@ -27,6 +39,9 @@ exports.supplierStats = async (req, res) => {
     inventoryAlerts: lowStock,
     recentOrders,
     ordersPerWeek,
+    confirmedGrossSales: Math.round(confirmedGross * 100) / 100,
+    platformFeesPaid: Math.round(platformFeesPaid * 100) / 100,
+    netRevenue: Math.round((confirmedGross - platformFeesPaid) * 100) / 100,
   });
 };
 
@@ -54,6 +69,43 @@ exports.buyerStats = async (req, res) => {
     openQuotes,
     recentOrders: orders.slice(0, 5),
     spendPerMonth,
+  });
+};
+
+exports.adminStats = async (req, res) => {
+  const [totalBuyers, totalSuppliers, verifiedSuppliers, activeProducts, orderCount, completedOrders, pendingQuotes, recentOrders, feeTotals] = await Promise.all([
+    User.countDocuments({ role: "buyer" }),
+    User.countDocuments({ role: "supplier" }),
+    User.countDocuments({ role: "supplier", "supplierProfile.isVerified": true }),
+    Product.countDocuments({ status: "available" }),
+    Order.countDocuments(),
+    Order.countDocuments({ status: "Completed" }),
+    Quote.countDocuments({ status: "Pending" }),
+    Order.find({}).sort({ createdAt: -1 }).limit(8).populate("buyerId", "name"),
+    Order.aggregate([
+      { $unwind: "$items" },
+      { $match: { "items.supplierConfirmedAt": { $exists: true } } },
+      { $group: { _id: null, platformRevenue: { $sum: "$items.platformFee" }, confirmedGrossSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } } },
+    ]),
+  ]);
+
+  return ok(res, {
+    totalBuyers,
+    totalSuppliers,
+    verifiedSuppliers,
+    activeProducts,
+    orderCount,
+    completedOrders,
+    pendingQuotes,
+    platformRevenue: Math.round((feeTotals[0]?.platformRevenue || 0) * 100) / 100,
+    confirmedGrossSales: Math.round((feeTotals[0]?.confirmedGrossSales || 0) * 100) / 100,
+    recentOrders: recentOrders.map((order) => ({
+      _id: order._id,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      createdAt: order.createdAt,
+      buyerName: order.buyerId?.name || "Unknown buyer",
+    })),
   });
 };
 

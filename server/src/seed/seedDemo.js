@@ -8,6 +8,18 @@ const Review = require("../models/Review");
 const Notification = require("../models/Notification");
 const Quote = require("../models/Quote");
 
+const DEMO_ADMIN = {
+  name: "Demo Admin",
+  email: "demo.admin@textilehub.com",
+  password: "Demo@1234",
+  role: "admin",
+  isOnboarded: true,
+  isEmailVerified: true,
+  // Never suspendable/demotable by anyone (including other admins) — keeps
+  // the always-available demo login stable. See adminController's guard.
+  isProtected: true,
+};
+
 const DEMO_BUYER = {
   name: "Demo Buyer",
   email: "demo.buyer@textilehub.com",
@@ -496,6 +508,13 @@ async function upsertUser(def) {
     user = await User.create(def);
     console.log(`Created ${def.role} account: ${def.email}`);
   } else {
+    // Re-syncing an already-existing seed account: keep protection flags in
+    // step with the definition above even across repeated `seed:demo` runs
+    // (e.g. this field didn't exist on an account created before it was added).
+    if (def.isProtected !== undefined && user.isProtected !== def.isProtected) {
+      user.isProtected = def.isProtected;
+      await user.save();
+    }
     console.log(`${def.role} account already exists: ${def.email}`);
   }
   return user;
@@ -578,12 +597,26 @@ async function seedOrders(buyer, productsA, productsB) {
     { items: [[bedsheet, 50]], status: "Pending", days: 0 },
   ];
 
+  // Statuses reached only after a supplier has accepted the order — matches
+  // orderController.updateOrderStatus, which charges the 10% platform fee
+  // (from the supplier's side only) the moment status first becomes "Accepted".
+  const CONFIRMED_STATUSES = ["Accepted", "Preparing", "Ready for Dispatch", "Completed"];
+
   const created = [];
   for (const def of orderDefs) {
     const items = def.items.filter(([p]) => p).map(([p, qty]) => orderItem(p, qty));
     if (!items.length) continue;
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const createdAt = daysAgo(def.days);
+
+    if (CONFIRMED_STATUSES.includes(def.status)) {
+      items.forEach((item) => {
+        const grossAmount = item.price * item.quantity;
+        item.platformFee = Math.round(grossAmount * 0.1 * 100) / 100;
+        item.supplierNetAmount = Math.round((grossAmount - item.platformFee) * 100) / 100;
+        item.supplierConfirmedAt = createdAt;
+      });
+    }
     const order = await Order.create({
       buyerId: buyer._id,
       items,
@@ -771,6 +804,7 @@ async function seedQuotes(buyer, productsA, productsB) {
 async function run() {
   await connectDB();
 
+  const admin = await upsertUser(DEMO_ADMIN);
   const buyer = await upsertUser(DEMO_BUYER);
   const supplier = await upsertUser(DEMO_SUPPLIER);
   const supplier2 = await upsertUser(DEMO_SUPPLIER_2);
@@ -789,6 +823,7 @@ async function run() {
   await seedQuotes(buyer, productsA, productsB);
 
   console.log("\nDemo login credentials:");
+  console.log(`  Admin:    ${admin.email} / ${DEMO_ADMIN.password}`);
   console.log(`  Buyer:    ${DEMO_BUYER.email} / ${DEMO_BUYER.password}`);
   console.log(`  Supplier: ${DEMO_SUPPLIER.email} / ${DEMO_SUPPLIER.password}`);
   console.log(`  Supplier 2: ${DEMO_SUPPLIER_2.email} / ${DEMO_SUPPLIER_2.password}`);

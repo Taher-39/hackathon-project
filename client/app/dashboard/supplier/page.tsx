@@ -32,7 +32,7 @@ interface Stats {
 }
 
 const TILES = [
-  { key: "totalProducts" as const, label: "Total Products", icon: Package, color: "text-indigo-600 bg-indigo-50" },
+  { key: "totalProducts" as const, label: "Total Products", icon: Package, color: "text-teal-600 bg-teal-50" },
   { key: "activeProducts" as const, label: "Active Products", icon: CheckCircle, color: "text-green-600 bg-green-50" },
   { key: "pendingOrders" as const, label: "Pending Orders", icon: Clock, color: "text-yellow-600 bg-yellow-50" },
   { key: "pendingQuotes" as const, label: "Quote Requests", icon: FileText, color: "text-purple-600 bg-purple-50" },
@@ -64,7 +64,7 @@ function SupplierDashboardContent() {
   return (
     <>
       <Reveal>
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-700 to-indigo-600 text-white p-6 mb-6">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-700 to-teal-600 text-white p-6 mb-6">
           <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:20px_20px]" />
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -72,7 +72,7 @@ function SupplierDashboardContent() {
                 {user?.supplierProfile?.businessName || user?.name}&apos;s Dashboard
                 {user?.supplierProfile?.isVerified && <VerifiedBadge />}
               </h1>
-              <p className="text-indigo-100 text-sm">Overview of your store performance</p>
+              <p className="text-teal-100 text-sm">Overview of your store performance</p>
               {user?.supplierProfile?.productCategories && (
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   {user.supplierProfile.productCategories.slice(0, 4).map((c: string) => (
@@ -84,10 +84,10 @@ function SupplierDashboardContent() {
               )}
             </div>
             <div className="flex items-center gap-2 sm:border-l sm:border-white/20 sm:pl-6">
-              <TrendingUp size={20} className="text-indigo-200" />
+              <TrendingUp size={20} className="text-teal-200" />
               <div>
                 <p className="text-2xl font-bold">${revenue8Weeks.toLocaleString()}</p>
-                <p className="text-xs text-indigo-200">Revenue (last 8 weeks)</p>
+                <p className="text-xs text-teal-200">Revenue (last 8 weeks)</p>
               </div>
             </div>
           </div>
@@ -121,7 +121,7 @@ function SupplierDashboardContent() {
             <div className="flex gap-3 mb-8">
               <Link
                 href="/dashboard/supplier/products"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
               >
                 Manage Products
               </Link>
@@ -183,7 +183,7 @@ function SupplierDashboardContent() {
               <h2 className="text-lg font-bold">Recent Orders</h2>
               <Link
                 href="/dashboard/supplier/orders"
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium inline-flex items-center gap-1"
               >
                 View all <ArrowRight size={14} />
               </Link>

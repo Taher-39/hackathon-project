@@ -34,7 +34,9 @@ export default function LoginPage() {
       const { user, token } = res.data.data;
       setAuth(user, token);
       useWishlistStore.getState().setIds((user.wishlist || []).map(String));
-      if (!user.isOnboarded) {
+      if (user.role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (!user.isOnboarded) {
         router.push(user.role === "buyer" ? "/onboarding/buyer" : "/onboarding/supplier");
       } else {
         router.push(user.role === "buyer" ? "/dashboard/buyer" : "/dashboard/supplier");
@@ -50,12 +52,13 @@ export default function LoginPage() {
     return loginWithCredentials(data);
   }
 
-  function demoLogin(role: "buyer" | "supplier") {
-    return loginWithCredentials(
-      role === "buyer"
-        ? { email: "demo.buyer@textilehub.com", password: "Demo@1234" }
-        : { email: "demo.supplier@textilehub.com", password: "Demo@1234" }
-    );
+  function demoLogin(role: "buyer" | "supplier" | "admin") {
+    const credentials = {
+      buyer: { email: "demo.buyer@textilehub.com", password: "Demo@1234" },
+      supplier: { email: "demo.supplier@textilehub.com", password: "Demo@1234" },
+      admin: { email: "demo.admin@textilehub.com", password: "Demo@1234" },
+    }[role];
+    return loginWithCredentials(credentials);
   }
 
   return (
@@ -110,6 +113,14 @@ export default function LoginPage() {
           className="border border-indigo-200 text-indigo-700 py-2 rounded-md hover:bg-indigo-50 disabled:opacity-60 text-sm font-medium"
         >
           Demo Supplier Login
+        </button>
+        <button
+          type="button"
+          onClick={() => demoLogin("admin")}
+          disabled={loading}
+          className="col-span-2 border border-slate-300 text-slate-700 py-2 rounded-md hover:bg-slate-50 disabled:opacity-60 text-sm font-medium"
+        >
+          Demo Admin Login
         </button>
       </div>
 

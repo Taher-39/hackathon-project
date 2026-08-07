@@ -50,7 +50,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  "w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-shadow";
+  "w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-400 transition-shadow";
 
 function SupplierProductsContent() {
   const toast = useToastStore((s) => s.show);
@@ -264,7 +264,7 @@ function SupplierProductsContent() {
           <h1 className="text-2xl font-bold">My Products</h1>
           <button
             onClick={openCreate}
-            className="inline-flex items-center gap-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-1 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
           >
             <Plus size={16} /> Add Product
           </button>
@@ -281,7 +281,7 @@ function SupplierProductsContent() {
           <p className="text-gray-500 mb-4">No products yet. Add your first product to get started.</p>
           <button
             onClick={openCreate}
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 bg-teal-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
           >
             <Plus size={16} /> Add Product
           </button>
@@ -298,7 +298,7 @@ function SupplierProductsContent() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.03, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -3 }}
-                className="group border rounded-xl bg-white overflow-hidden flex flex-col hover:shadow-lg hover:border-indigo-200 transition-shadow"
+                className="group border rounded-xl bg-white overflow-hidden flex flex-col hover:shadow-lg hover:border-teal-200 transition-shadow"
               >
                 <div className="aspect-video bg-gray-100 overflow-hidden">
                   {p.images?.[0]?.url ? (
@@ -313,7 +313,7 @@ function SupplierProductsContent() {
                   )}
                 </div>
                 <div className="p-3 flex-1 flex flex-col gap-1">
-                  <span className="text-xs text-indigo-600 uppercase font-medium">{p.category}</span>
+                  <span className="text-xs text-teal-600 uppercase font-medium">{p.category}</span>
                   <h3 className="font-medium">{p.name}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <span>${p.price.toFixed(2)}</span>
@@ -465,7 +465,7 @@ function SupplierProductsContent() {
                     <button
                       type="button"
                       onClick={addSizeRow}
-                      className="text-xs inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
                     >
                       <Plus size={12} /> Add size
                     </button>
@@ -513,7 +513,7 @@ function SupplierProductsContent() {
                     <button
                       type="button"
                       onClick={addTierRow}
-                      className="text-xs inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-xs inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 font-medium"
                     >
                       <Plus size={12} /> Add tier
                     </button>
@@ -598,7 +598,7 @@ function SupplierProductsContent() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+                  className="w-full bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 disabled:opacity-60 transition-colors"
                 >
                   {saving ? "Saving..." : editing ? "Save changes" : "Create product"}
                 </button>

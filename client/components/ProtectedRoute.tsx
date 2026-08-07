@@ -26,7 +26,7 @@ export default function ProtectedRoute({
       return;
     }
     if (role && user.role !== role) {
-      router.replace(user.role === "buyer" ? "/dashboard/buyer" : "/dashboard/supplier");
+      router.replace(user.role === "buyer" ? "/dashboard/buyer" : user.role === "supplier" ? "/dashboard/supplier" : "/dashboard/admin");
       return;
     }
     setReady(true);

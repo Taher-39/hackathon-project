@@ -71,6 +71,9 @@ export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuthStore();
+  // Only buyers (or guests, who get prompted to log in) can purchase — admin
+  // and supplier accounts never place orders on the marketplace.
+  const canPurchase = !user || user.role === "buyer";
   const addItem = useCartStore((s) => s.addItem);
   const toast = useToastStore((s) => s.show);
   const { wishlisted, toggle: toggleWishlist } = useWishlistToggle(String(params.id));
@@ -414,7 +417,7 @@ export default function ProductDetailPage() {
           )}
         </dl>
 
-        {!!product.sizes?.length && user?.role !== "supplier" && (
+        {!!product.sizes?.length && canPurchase && (
           <div className="mt-6">
             <p className="text-sm font-medium mb-2">
               Select size{selectedSize ? ` — ${selectedSize} (${product.sizes.find((s) => s.label === selectedSize)?.stock ?? 0} in stock)` : ""}
@@ -449,7 +452,7 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {product.status === "available" && user?.role !== "supplier" && (
+        {product.status === "available" && canPurchase && (
           <div className="mt-6 flex items-center gap-3">
             <input
               type="number"
@@ -468,7 +471,7 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {user?.role !== "supplier" && (
+        {canPurchase && (
           <button
             onClick={openQuoteModal}
             className="mt-3 w-full border border-indigo-200 text-indigo-700 py-2 rounded-md hover:bg-indigo-50 inline-flex items-center justify-center gap-1.5 text-sm font-medium"

@@ -13,6 +13,14 @@ async function protect(req, res, next) {
     }
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ success: false, message: "User not found" });
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: user.suspendedReason
+          ? `Your account has been suspended: ${user.suspendedReason}`
+          : "Your account has been suspended. Contact support for details.",
+      });
+    }
 
     req.user = user;
     next();

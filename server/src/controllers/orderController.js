@@ -125,6 +125,19 @@ exports.updateOrderStatus = async (req, res) => {
   const isSupplierOnOrder = order.items.some((i) => String(i.supplierId) === String(req.user._id));
   if (!isSupplierOnOrder) return fail(res, "Forbidden: not your order", 403);
 
+  // Record the platform's 10% fee only when a supplier accepts their items.
+  // supplierConfirmedAt makes the operation idempotent across later status updates.
+  if (status === "Accepted") {
+    const confirmedAt = new Date();
+    order.items.forEach((item) => {
+      if (String(item.supplierId) !== String(req.user._id) || item.supplierConfirmedAt) return;
+      const grossAmount = item.price * item.quantity;
+      item.platformFee = Math.round(grossAmount * 0.1 * 100) / 100;
+      item.supplierNetAmount = Math.round((grossAmount - item.platformFee) * 100) / 100;
+      item.supplierConfirmedAt = confirmedAt;
+    });
+  }
+
   order.status = status;
   await order.save();
 

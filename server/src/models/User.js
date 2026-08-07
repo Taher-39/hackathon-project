@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
-    role: { type: String, enum: ["buyer", "supplier"], required: true },
+    role: { type: String, enum: ["buyer", "supplier", "admin"], required: true },
     isOnboarded: { type: Boolean, default: false },
     buyerProfile: buyerProfileSchema,
     supplierProfile: supplierProfileSchema,
@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema(
     emailVerificationExpires: Date,
     passwordResetTokenHash: String,
     passwordResetExpires: Date,
+    // Admin moderation. Suspended accounts can't log in or use an existing
+    // session (checked in authController.login and middleware/auth.protect).
+    status: { type: String, enum: ["active", "suspended"], default: "active" },
+    suspendedReason: String,
+    // The seeded demo admin is marked protected so the always-available demo
+    // login can't be suspended, demoted, or otherwise modified by any admin
+    // (including other admins) — see adminController's guard.
+    isProtected: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

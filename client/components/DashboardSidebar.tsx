@@ -3,7 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, MapPin, Lock, Package, ClipboardList, FileText, UserRound } from "lucide-react";
+import {
+  LayoutDashboard,
+  MapPin,
+  Lock,
+  Package,
+  ClipboardList,
+  FileText,
+  UserRound,
+  Users,
+  Store,
+  ScrollText,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 
 interface NavItem {
@@ -29,10 +41,44 @@ const SUPPLIER_NAV: NavItem[] = [
   { href: "/dashboard/security", label: "Security", icon: Lock },
 ];
 
+const ADMIN_NAV: NavItem[] = [
+  { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+  { href: "/dashboard/admin/buyers", label: "Buyers", icon: Users },
+  { href: "/dashboard/admin/suppliers", label: "Suppliers", icon: Store },
+  { href: "/dashboard/admin/admins", label: "Admin Management", icon: ShieldCheck },
+  { href: "/dashboard/admin/orders", label: "Orders", icon: ClipboardList },
+  { href: "/dashboard/admin/audit-log", label: "Audit Log", icon: ScrollText },
+  { href: "/dashboard/security", label: "Security", icon: Lock },
+];
+
+function navFor(role?: string) {
+  if (role === "supplier") return SUPPLIER_NAV;
+  if (role === "admin") return ADMIN_NAV;
+  return BUYER_NAV;
+}
+
+// Each role gets its own accent so the dashboard "feels" different at a
+// glance — indigo for buyers, teal for suppliers, slate for admins. Classes
+// are written out in full (not built from a template string) so Tailwind's
+// scanner picks them all up.
+const THEME = {
+  buyer: { text: "text-indigo-700", icon: "text-indigo-600", pill: "bg-indigo-50", solid: "bg-indigo-600" },
+  supplier: { text: "text-teal-700", icon: "text-teal-600", pill: "bg-teal-50", solid: "bg-teal-600" },
+  admin: { text: "text-slate-700", icon: "text-slate-600", pill: "bg-slate-100", solid: "bg-slate-700" },
+} as const;
+
+function themeFor(role?: string) {
+  if (role === "supplier") return THEME.supplier;
+  if (role === "admin") return THEME.admin;
+  return THEME.buyer;
+}
+
 export function DesktopSidebar() {
   const { user } = useAuthStore();
   const pathname = usePathname();
-  const items = user?.role === "supplier" ? SUPPLIER_NAV : BUYER_NAV;
+  const items = navFor(user?.role);
+  const theme = themeFor(user?.role);
 
   return (
     <aside className="hidden md:block w-56 shrink-0">
@@ -45,17 +91,17 @@ export function DesktopSidebar() {
               key={item.href}
               href={item.href}
               className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                active ? "text-indigo-700 font-medium" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                active ? `${theme.text} font-medium` : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
               {active && (
                 <motion.span
                   layoutId="sidebar-active-pill"
-                  className="absolute inset-0 bg-indigo-50 rounded-lg"
+                  className={`absolute inset-0 ${theme.pill} rounded-lg`}
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               )}
-              <Icon size={16} className={`relative ${active ? "text-indigo-600" : "text-gray-400"}`} />
+              <Icon size={16} className={`relative ${active ? theme.icon : "text-gray-400"}`} />
               <span className="relative">{item.label}</span>
             </Link>
           );
@@ -68,7 +114,8 @@ export function DesktopSidebar() {
 export function MobileTabs() {
   const { user } = useAuthStore();
   const pathname = usePathname();
-  const items = user?.role === "supplier" ? SUPPLIER_NAV : BUYER_NAV;
+  const items = navFor(user?.role);
+  const theme = themeFor(user?.role);
 
   return (
     <nav className="md:hidden -mx-4 px-4 mb-4 flex gap-2 overflow-x-auto pb-1">
@@ -80,13 +127,13 @@ export function MobileTabs() {
             key={item.href}
             href={item.href}
             className={`relative flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors ${
-              active ? "text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200"
+              active ? `text-white border-transparent` : "bg-white text-gray-600 border-gray-200"
             }`}
           >
             {active && (
               <motion.span
                 layoutId="mobile-active-pill"
-                className="absolute inset-0 bg-indigo-600 rounded-full -z-10"
+                className={`absolute inset-0 ${theme.solid} rounded-full -z-10`}
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
               />
             )}

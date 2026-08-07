@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type Role = "buyer" | "supplier";
+export type Role = "buyer" | "supplier" | "admin";
 
 export interface SavedAddress {
   fullName: string;
@@ -43,6 +43,7 @@ export interface AuthUser {
   wishlist?: string[];
   savedAddress?: SavedAddress;
   isEmailVerified?: boolean;
+  isProtected?: boolean;
 }
 
 interface AuthState {

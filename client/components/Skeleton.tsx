@@ -20,3 +20,18 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
     </div>
   );
 }
+
+export function TableSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="border rounded-xl bg-white shadow-sm divide-y animate-pulse overflow-hidden">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="p-3 flex items-center gap-4">
+          <div className="h-4 w-1/5 bg-gray-200 rounded" />
+          <div className="h-4 w-1/4 bg-gray-200 rounded" />
+          <div className="h-4 w-1/6 bg-gray-200 rounded" />
+          <div className="h-4 w-1/6 bg-gray-200 rounded ml-auto" />
+        </div>
+      ))}
+    </div>
+  );
+}

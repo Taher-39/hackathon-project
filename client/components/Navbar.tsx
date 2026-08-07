@@ -45,7 +45,8 @@ export default function Navbar() {
     router.push("/login");
   }
 
-  const dashboardHref = user?.role === "supplier" ? "/dashboard/supplier" : "/dashboard/buyer";
+  const dashboardHref =
+    user?.role === "supplier" ? "/dashboard/supplier" : user?.role === "admin" ? "/dashboard/admin" : "/dashboard/buyer";
 
   return (
     <nav

@@ -4,11 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
-import { Building2, UserRound } from "lucide-react";
+import { Building2, UserRound, ShieldCheck, Lock } from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useAuthStore, useToastStore } from "@/lib/store";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
+
+const adminSchema = z.object({
+  name: z.string().min(2, "Required"),
+});
 
 const buyerSchema = z.object({
   name: z.string().min(2, "Required"),
@@ -32,10 +36,47 @@ const supplierSchema = z.object({
   moq: z.string(),
 });
 
+type AdminForm = z.infer<typeof adminSchema>;
 type BuyerForm = z.infer<typeof buyerSchema>;
 type SupplierForm = z.infer<typeof supplierSchema>;
 const inputClass = "w-full rounded-md border px-3 py-2 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30";
 const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
+
+function AdminProfileForm() {
+  const { user, token, setAuth } = useAuthStore();
+  const toast = useToastStore((state) => state.show);
+  const [saving, setSaving] = useState(false);
+  const { register, handleSubmit, formState: { errors } } = useForm<AdminForm>({
+    resolver: zodResolver(adminSchema),
+    defaultValues: { name: user?.name || "" },
+  });
+  async function save(data: AdminForm) {
+    setSaving(true);
+    try {
+      const res = await api.put("/users/profile", data);
+      setAuth(res.data.data.user, token as string);
+      toast("Profile updated", "success");
+    } catch (error) { toast(apiErrorMessage(error), "error"); } finally { setSaving(false); }
+  }
+  return (
+    <ProfileCard title="Admin Profile" icon={<ShieldCheck size={18} />}>
+      {user?.isProtected && (
+        <div className="mb-4 flex items-center gap-2 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+          <Lock size={13} /> This is the protected demo admin account — its role can&apos;t be changed by anyone.
+        </div>
+      )}
+      <form onSubmit={handleSubmit(save)} className="space-y-4">
+        <Field label="Your name" error={errors.name?.message}>
+          <input {...register("name")} className={inputClass} />
+        </Field>
+        <Field label="Email">
+          <input value={user?.email || ""} disabled className={`${inputClass} bg-gray-50 text-gray-500`} />
+        </Field>
+        <SaveButton saving={saving} />
+      </form>
+    </ProfileCard>
+  );
+}
 
 function BuyerProfileForm() {
   const { user, token, setAuth } = useAuthStore();
@@ -85,5 +126,10 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 function SaveButton({ saving }: { saving: boolean }) { return <button type="submit" disabled={saving} className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-60">{saving ? "Saving..." : "Save changes"}</button>; }
 function ProfileCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) { return <div className="mx-auto max-w-xl rounded-xl border bg-white p-6 shadow-sm"><h1 className="mb-1 flex items-center gap-2 text-xl font-bold"><span className="rounded-lg bg-indigo-50 p-2 text-indigo-600">{icon}</span>{title}</h1><p className="mb-6 text-sm text-gray-500">Keep your marketplace information up to date.</p>{children}</div>; }
 
-function ProfileContent() { const role = useAuthStore((state) => state.user?.role); return role === "supplier" ? <SupplierProfileForm /> : <BuyerProfileForm />; }
+function ProfileContent() {
+  const role = useAuthStore((state) => state.user?.role);
+  if (role === "supplier") return <SupplierProfileForm />;
+  if (role === "admin") return <AdminProfileForm />;
+  return <BuyerProfileForm />;
+}
 export default function ProfilePage() { return <ProtectedRoute><DashboardLayout><ProfileContent /></DashboardLayout></ProtectedRoute>; }

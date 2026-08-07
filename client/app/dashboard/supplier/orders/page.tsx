@@ -115,7 +115,7 @@ function SupplierOrdersContent() {
                       value={order.status}
                       disabled={updating === order._id}
                       onChange={(e) => updateStatus(order._id, e.target.value)}
-                      className="border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                      className="border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40"
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>
