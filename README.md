@@ -111,9 +111,7 @@ can suspend it or change its role, so it always stays available for grading/demo
   action (who did what, to whom, when)
 
 ### AI Marketplace Assistant
-- Powered by a custom Hugging Face LLM — the brief's preferred option, and how this submission is configured and
-  demoed. `HUGGINGFACE_API_KEY`/`HUGGINGFACE_MODEL` (see `server/.env.example`) select the model;
-  Google Gemini (`gemini-2.5-flash`) remains as an automatic fallback if those two are unset
+- Powered by Google Gemini (`gemini-2.5-flash`)
 - Floating chat widget with natural-language search + voice input, grounded only in live DB data
 - Personalized recommendations from the buyer's onboarding profile
 - Product Q&A and side-by-side comparison, both backed by real product records — never invented
@@ -136,7 +134,7 @@ can suspend it or change its role, so it always stays available for grading/demo
 **Frontend** — Next.js (App Router) · Tailwind CSS · React Hook Form + Zod · Zustand · lucide-react
 
 **Backend** — Node.js + Express · MongoDB + Mongoose · JWT (access + refresh) · Cloudinary ·
-Nodemailer · Hugging Face LLM (AI assistant + onboarding autofill; Google Gemini as fallback)
+Nodemailer · Google Gemini (AI assistant + onboarding autofill)
 
 **Deployment** — Client on Vercel; server supports both a traditional Node process (Render/Railway,
 via `server.js`) and Vercel serverless functions (via `api/index.js` + `vercel.json`).
@@ -158,7 +156,7 @@ project-root/
 
 ```bash
 cd server
-cp .env.example .env   # fill in your own MongoDB/Cloudinary/Hugging Face/Gemini/Gmail credentials
+cp .env.example .env   # fill in your own MongoDB/Cloudinary/Gemini/Gmail credentials
 npm install
 npm run seed:demo      # optional: creates the demo admin/buyer/supplier + sample catalog
 npm run dev            # http://localhost:5000
