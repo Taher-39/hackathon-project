@@ -48,8 +48,15 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  // Zustand's persist middleware reads localStorage asynchronously after
+  // mount, so on a hard refresh `user`/`token` are briefly null even for a
+  // logged-in visitor. Anything that redirects unauthenticated users (e.g.
+  // ProtectedRoute) must wait for hasHydrated before trusting that null, or
+  // it bounces a logged-in user to /login on every reload.
+  hasHydrated: boolean;
   setAuth: (user: AuthUser, token: string) => void;
   logout: () => void;
+  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -57,6 +64,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      hasHydrated: false,
       setAuth: (user, token) => set({ user, token }),
       logout: () => {
         set({ user: null, token: null });
@@ -65,8 +73,14 @@ export const useAuthStore = create<AuthState>()(
         useCartStore.getState().clear();
         useWishlistStore.getState().clear();
       },
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
-    { name: "auth-storage" }
+    {
+      name: "auth-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
   )
 );
 

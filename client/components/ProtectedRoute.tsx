@@ -11,11 +11,16 @@ export default function ProtectedRoute({
   children: React.ReactNode;
   role?: Role;
 }) {
-  const { user, token } = useAuthStore();
+  const { user, token, hasHydrated } = useAuthStore();
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    // Persisted auth state loads from localStorage a tick after mount; until
+    // that finishes, user/token are null even for someone already logged in.
+    // Deciding anything before hasHydrated would bounce a valid session to
+    // /login on every page refresh.
+    if (!hasHydrated) return;
     if (!token || !user) {
       router.replace("/login");
       return;
@@ -25,7 +30,7 @@ export default function ProtectedRoute({
       return;
     }
     setReady(true);
-  }, [token, user, role, router]);
+  }, [hasHydrated, token, user, role, router]);
 
   if (!ready) return <div className="max-w-7xl mx-auto px-4 py-12 text-gray-500">Loading...</div>;
 
