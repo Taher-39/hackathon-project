@@ -6,8 +6,17 @@ exports.onboardBuyer = async (req, res) => {
   if (req.user.role !== "buyer") return fail(res, "Only buyers can access this", 403);
 
   const { businessType, industry, productCategories, fabricTypes, typicalOrderQuantity, budgetRange } = req.body;
-  if (!businessType || !industry) {
-    return fail(res, "businessType and industry are required", 400);
+  if (
+    !businessType ||
+    !industry ||
+    !Array.isArray(productCategories) ||
+    !productCategories.length ||
+    !Array.isArray(fabricTypes) ||
+    !fabricTypes.length ||
+    !typicalOrderQuantity ||
+    !budgetRange
+  ) {
+    return fail(res, "Complete all buyer onboarding fields", 400);
   }
 
   req.user.buyerProfile = {
@@ -29,8 +38,19 @@ exports.onboardSupplier = async (req, res) => {
 
   const { businessName, businessType, contactInfo, address, operatingHours, productCategories, fabricTypes, moq } =
     req.body;
-  if (!businessName || !contactInfo || !address) {
-    return fail(res, "businessName, contactInfo and address are required", 400);
+  if (
+    !businessName ||
+    !businessType ||
+    !contactInfo ||
+    !address ||
+    !operatingHours ||
+    !Array.isArray(productCategories) ||
+    !productCategories.length ||
+    !Array.isArray(fabricTypes) ||
+    !fabricTypes.length ||
+    !moq
+  ) {
+    return fail(res, "Complete all supplier onboarding fields", 400);
   }
 
   req.user.supplierProfile = {
@@ -73,6 +93,47 @@ exports.toggleWishlist = async (req, res) => {
   await user.save();
 
   return ok(res, { wishlisted, wishlist: user.wishlist }, wishlisted ? "Added to wishlist" : "Removed from wishlist");
+};
+
+exports.updateProfile = async (req, res) => {
+  const { name, buyerProfile, supplierProfile } = req.body;
+
+  if (!name || !name.trim()) return fail(res, "Name is required", 400);
+  req.user.name = name.trim();
+
+  if (req.user.role === "buyer" && buyerProfile) {
+    const { businessType, industry, productCategories, fabricTypes, typicalOrderQuantity, budgetRange } = buyerProfile;
+    req.user.buyerProfile = {
+      businessType: businessType || "",
+      industry: industry || "",
+      productCategories: Array.isArray(productCategories) ? productCategories.filter(Boolean) : [],
+      fabricTypes: Array.isArray(fabricTypes) ? fabricTypes.filter(Boolean) : [],
+      typicalOrderQuantity: typicalOrderQuantity || "",
+      budgetRange: budgetRange || "",
+    };
+  }
+
+  if (req.user.role === "supplier" && supplierProfile) {
+    const { businessName, businessType, contactInfo, address, operatingHours, productCategories, fabricTypes, moq } =
+      supplierProfile;
+    if (!businessName || !contactInfo || !address) {
+      return fail(res, "Business name, contact info and address are required", 400);
+    }
+    req.user.supplierProfile = {
+      businessName,
+      businessType: businessType || "",
+      contactInfo,
+      address,
+      operatingHours: operatingHours || "",
+      productCategories: Array.isArray(productCategories) ? productCategories.filter(Boolean) : [],
+      fabricTypes: Array.isArray(fabricTypes) ? fabricTypes.filter(Boolean) : [],
+      moq: moq || "",
+      isVerified: req.user.supplierProfile?.isVerified || false,
+    };
+  }
+
+  await req.user.save();
+  return ok(res, { user: req.user.toSafeObject() }, "Profile updated");
 };
 
 exports.updateAddress = async (req, res) => {

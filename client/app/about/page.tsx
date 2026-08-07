@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Search, ShieldCheck, Sparkles, PackageCheck, Users2, Factory } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
@@ -77,10 +78,12 @@ export default function AboutPage() {
         </Reveal>
         <Reveal delay={0.1}>
           <div className="rounded-2xl overflow-hidden shadow-xl">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1594734415578-00fc9540929b?w=1000&h=800&q=80&auto=format&fit=crop"
               alt="Woven cotton fabric texture"
               className="w-full h-full object-cover aspect-[4/3]"
+              width={1000}
+              height={800}
             />
           </div>
         </Reveal>

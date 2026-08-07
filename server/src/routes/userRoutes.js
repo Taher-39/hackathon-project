@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const {
   onboardBuyer,
   onboardSupplier,
+  updateProfile,
   getWishlist,
   toggleWishlist,
   updateAddress,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.post("/onboarding/buyer", protect, asyncHandler(onboardBuyer));
 router.post("/onboarding/supplier", protect, asyncHandler(onboardSupplier));
+router.put("/profile", protect, asyncHandler(updateProfile));
 router.get("/wishlist", protect, asyncHandler(getWishlist));
 router.post("/wishlist/:productId", protect, asyncHandler(toggleWishlist));
 router.put("/address", protect, asyncHandler(updateAddress));

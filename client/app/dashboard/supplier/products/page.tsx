@@ -148,8 +148,15 @@ function SupplierProductsContent() {
 
     const usingSizes = validSizeRows.length > 0;
 
-    if (!form.name || !form.category || !form.description || form.price === "" || (!usingSizes && form.stock === "")) {
-      setFormError("Name, category, description, price and stock are required");
+    if (
+      !form.name ||
+      !form.category ||
+      !form.description ||
+      !form.colors.trim() ||
+      form.price === "" ||
+      (!usingSizes && form.stock === "")
+    ) {
+      setFormError("Name, category, description, colors, price and stock are required");
       return;
     }
     if (Number(form.price) < 0 || (!usingSizes && Number(form.stock) < 0)) {
@@ -406,10 +413,11 @@ function SupplierProductsContent() {
                   rows={3}
                 />
                 <input
-                  placeholder="Colors (comma separated)"
+                  placeholder="Colors, comma separated (e.g. Navy, White, Charcoal) *"
                   value={form.colors}
                   onChange={(e) => setForm({ ...form, colors: e.target.value })}
                   className={inputClass}
+                  required
                 />
                 <input
                   placeholder="Fabric type"

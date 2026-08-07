@@ -39,3 +39,15 @@ exports.productQna = async (req, res) => {
   const result = await assistantService.productQna(req.params.productId, question.trim());
   return ok(res, result);
 };
+
+exports.onboardingAutofill = async (req, res) => {
+  const { role, description } = req.body;
+  if (!["buyer", "supplier"].includes(role)) return fail(res, "role must be buyer or supplier", 400);
+  if (role !== req.user.role) return fail(res, "You can only create a profile for your own role", 403);
+  if (!description || description.trim().length < 12) {
+    return fail(res, "Please provide a short business description", 400);
+  }
+
+  const fields = await assistantService.onboardingAutofill(role, description.trim());
+  return ok(res, { fields }, "AI suggestions are ready for review");
+};

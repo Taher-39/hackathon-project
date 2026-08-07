@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // These rules are useful with React Compiler-managed data fetching, but
+      // this app deliberately initializes client state from async API calls
+      // and persisted Zustand hydration inside effects.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

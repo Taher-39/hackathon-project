@@ -57,7 +57,6 @@ function SupplierDashboardContent() {
         .then((res) => setTopProducts(res.data.data.products))
         .catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?._id]);
 
   const revenue8Weeks = stats?.ordersPerWeek?.reduce((sum, w) => sum + w.revenue, 0) ?? 0;

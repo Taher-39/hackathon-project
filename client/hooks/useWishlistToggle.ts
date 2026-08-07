@@ -8,14 +8,16 @@ export function useWishlistToggle(productId: string) {
 
   async function toggle() {
     const wasWishlisted = wishlisted;
-    wasWishlisted ? remove(productId) : add(productId);
+    if (wasWishlisted) remove(productId);
+    else add(productId);
     try {
       const res = await api.post(`/users/wishlist/${productId}`);
       const { wishlisted: serverState } = res.data.data;
       if (serverState) add(productId);
       else remove(productId);
     } catch (err) {
-      wasWishlisted ? add(productId) : remove(productId);
+      if (wasWishlisted) add(productId);
+      else remove(productId);
       toast(apiErrorMessage(err), "error");
     }
   }

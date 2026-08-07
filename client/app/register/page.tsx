@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, apiErrorMessage } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useToastStore } from "@/lib/store";
 
 const schema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -20,7 +20,7 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -30,7 +30,6 @@ export default function RegisterPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { role: "buyer" } });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       const res = await api.post("/auth/register", data);
@@ -38,7 +37,7 @@ export default function RegisterPage() {
       setAuth(user, token);
       router.push(user.role === "buyer" ? "/onboarding/buyer" : "/onboarding/supplier");
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -85,8 +84,6 @@ export default function RegisterPage() {
           </div>
           {errors.role && <p className="text-red-600 text-sm mt-1">{errors.role.message}</p>}
         </div>
-
-        {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
 
         <button
           type="submit"

@@ -11,7 +11,10 @@ import { useEffect, useRef } from "react";
 export function useInfiniteScroll(onIntersect: () => void, enabled = true) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const callbackRef = useRef(onIntersect);
-  callbackRef.current = onIntersect;
+
+  useEffect(() => {
+    callbackRef.current = onIntersect;
+  }, [onIntersect]);
 
   useEffect(() => {
     if (!enabled) return;

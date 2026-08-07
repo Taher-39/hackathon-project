@@ -7,7 +7,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, CheckCircle2 } from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useToastStore } from "@/lib/store";
 import { Reveal } from "@/components/motion/Reveal";
 
 const schema = z.object({
@@ -21,7 +21,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function ContactPage() {
   const user = useAuthStore((s) => s.user);
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -35,13 +35,12 @@ export default function ContactPage() {
   });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       await api.post("/contact", data);
       setSent(true);
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -113,8 +112,6 @@ export default function ContactPage() {
               <textarea {...register("message")} rows={5} className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-shadow" />
               {errors.message && <p className="text-red-600 text-sm mt-1">{errors.message.message}</p>}
             </div>
-
-            {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
 
             <button
               type="submit"

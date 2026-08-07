@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useAuthStore, useCartStore, useToastStore } from "@/lib/store";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -100,7 +101,7 @@ function CheckoutContent() {
   if (items.length === 0) {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center text-gray-500">
-        Your cart is empty. <a href="/" className="text-indigo-700 font-medium">Browse products</a>
+        Your cart is empty. <Link href="/" className="text-indigo-700 font-medium">Browse products</Link>
       </div>
     );
   }

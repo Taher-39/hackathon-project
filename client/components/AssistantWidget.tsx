@@ -12,6 +12,26 @@ interface ChatMessage {
   products?: ProductSummary[];
 }
 
+interface SpeechRecognitionResultItem {
+  transcript: string;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: ArrayLike<ArrayLike<SpeechRecognitionResultItem>>;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
 const SUGGESTIONS = [
   "Find me cotton fabric under $5",
   "What denim do you have in stock?",
@@ -32,20 +52,30 @@ export default function AssistantWidget() {
   const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
+    const recognitionConstructor = (
+      window as typeof window & {
+        SpeechRecognition?: SpeechRecognitionConstructor;
+        webkitSpeechRecognition?: SpeechRecognitionConstructor;
+      }
+    ).SpeechRecognition ||
+      (
+        window as typeof window & {
+          webkitSpeechRecognition?: SpeechRecognitionConstructor;
+        }
+      ).webkitSpeechRecognition;
+    if (!recognitionConstructor) return;
+    const recognition = new recognitionConstructor();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-    recognition.onresult = (e: any) => {
+    recognition.onresult = (e) => {
       setInput(e.results[0][0].transcript);
     };
     recognition.onend = () => setListening(false);

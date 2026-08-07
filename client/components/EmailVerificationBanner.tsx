@@ -26,11 +26,13 @@ export default function EmailVerificationBanner() {
     }
   }
 
+  const action = user.role === "supplier" ? "adding" : "selling";
+
   return (
     <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2.5 mb-4">
       <span className="flex items-center gap-2">
         <MailWarning size={16} className="shrink-0" />
-        Your email address isn&apos;t verified yet.
+        Your email address isn&apos;t verified yet. Verify it before {action} products.
       </span>
       <button
         onClick={resend}

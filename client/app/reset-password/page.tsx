@@ -7,6 +7,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
+import { useToastStore } from "@/lib/store";
 
 const schema = z
   .object({
@@ -24,7 +25,7 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -35,14 +36,13 @@ function ResetPasswordForm() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { token, newPassword: data.newPassword });
       setDone(true);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -84,8 +84,6 @@ function ResetPasswordForm() {
           <input type="password" {...register("confirmPassword")} className="w-full border rounded-md px-3 py-2" />
           {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword.message}</p>}
         </div>
-
-        {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
 
         <button
           type="submit"

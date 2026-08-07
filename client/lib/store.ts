@@ -11,14 +11,35 @@ export interface SavedAddress {
   postalCode?: string;
 }
 
+export interface BuyerProfile {
+  businessType?: string;
+  industry?: string;
+  productCategories?: string[];
+  fabricTypes?: string[];
+  typicalOrderQuantity?: string;
+  budgetRange?: string;
+}
+
+export interface SupplierProfile {
+  businessName?: string;
+  businessType?: string;
+  contactInfo?: string;
+  address?: string;
+  operatingHours?: string;
+  productCategories?: string[];
+  fabricTypes?: string[];
+  moq?: string;
+  isVerified?: boolean;
+}
+
 export interface AuthUser {
   _id: string;
   name: string;
   email: string;
   role: Role;
   isOnboarded: boolean;
-  buyerProfile?: any;
-  supplierProfile?: any;
+  buyerProfile?: BuyerProfile;
+  supplierProfile?: SupplierProfile;
   wishlist?: string[];
   savedAddress?: SavedAddress;
   isEmailVerified?: boolean;

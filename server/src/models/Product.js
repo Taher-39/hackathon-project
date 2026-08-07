@@ -6,7 +6,13 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     category: { type: String, required: true },
     description: { type: String, required: true },
-    colors: [String],
+    colors: {
+      type: [String],
+      validate: {
+        validator: (arr) => Array.isArray(arr) && arr.length > 0,
+        message: "At least one color is required",
+      },
+    },
     specifications: { type: String },
     fabricType: String,
     stock: { type: Number, required: true, min: 0, default: 0 },

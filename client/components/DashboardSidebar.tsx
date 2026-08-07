@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Heart, MapPin, Lock, Package, ClipboardList, FileText } from "lucide-react";
+import { LayoutDashboard, MapPin, Lock, Package, ClipboardList, FileText, UserRound } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 
 interface NavItem {
@@ -15,6 +15,7 @@ interface NavItem {
 const BUYER_NAV: NavItem[] = [
   { href: "/dashboard/buyer", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/buyer/quotes", label: "Quote Requests", icon: FileText },
+  { href: "/dashboard/profile", label: "Profile", icon: UserRound },
   { href: "/dashboard/buyer/address", label: "Address", icon: MapPin },
   { href: "/dashboard/security", label: "Security", icon: Lock },
 ];
@@ -24,6 +25,7 @@ const SUPPLIER_NAV: NavItem[] = [
   { href: "/dashboard/supplier/products", label: "Products", icon: Package },
   { href: "/dashboard/supplier/orders", label: "Orders", icon: ClipboardList },
   { href: "/dashboard/supplier/quotes", label: "Quote Requests", icon: FileText },
+  { href: "/dashboard/profile", label: "Business Profile", icon: UserRound },
   { href: "/dashboard/security", label: "Security", icon: Lock },
 ];
 

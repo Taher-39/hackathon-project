@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, apiErrorMessage } from "@/lib/api";
-import { useAuthStore, useWishlistStore } from "@/lib/store";
+import { useAuthStore, useWishlistStore, useToastStore } from "@/lib/store";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -18,7 +18,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -28,7 +28,6 @@ export default function LoginPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   async function loginWithCredentials(credentials: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       const res = await api.post("/auth/login", credentials);
@@ -41,7 +40,7 @@ export default function LoginPage() {
         router.push(user.role === "buyer" ? "/dashboard/buyer" : "/dashboard/supplier");
       }
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -79,8 +78,6 @@ export default function LoginPage() {
           <input type="password" {...register("password")} className="w-full border rounded-md px-3 py-2" />
           {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>}
         </div>
-
-        {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
 
         <button
           type="submit"

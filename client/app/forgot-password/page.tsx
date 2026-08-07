@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { MailCheck } from "lucide-react";
 import { api, apiErrorMessage } from "@/lib/api";
+import { useToastStore } from "@/lib/store";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -14,7 +15,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -25,13 +26,12 @@ export default function ForgotPasswordPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       await api.post("/auth/forgot-password", data);
       setSent(true);
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -61,8 +61,6 @@ export default function ForgotPasswordPage() {
           <input {...register("email")} className="w-full border rounded-md px-3 py-2" placeholder="you@company.com" />
           {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
         </div>
-
-        {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
 
         <button
           type="submit"

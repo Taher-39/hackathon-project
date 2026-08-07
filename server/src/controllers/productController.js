@@ -30,6 +30,14 @@ function parsePriceTiers(raw) {
   return cleaned.sort((a, b) => a.minQty - b.minQty);
 }
 
+// colors arrives as a comma-separated string (or an array) over multipart
+// form-data, e.g. "Navy, White, Charcoal". Required: every product must list
+// at least one available color.
+function parseColors(raw) {
+  const list = Array.isArray(raw) ? raw : String(raw || "").split(",");
+  return list.map((c) => String(c).trim()).filter(Boolean);
+}
+
 // sizes arrives as a JSON string over multipart form-data, e.g.
 // '[{"label":"M","stock":40},{"label":"L","stock":0}]'. Labels must be
 // non-empty and unique (case-insensitive) so a buyer's size selection maps to
@@ -69,6 +77,11 @@ exports.createProduct = async (req, res) => {
     return fail(res, "price and stock must not be negative", 400);
   }
 
+  const cleanedColors = parseColors(colors);
+  if (cleanedColors.length === 0) {
+    return fail(res, "At least one color is required", 400);
+  }
+
   let priceTiers;
   let sizes;
   try {
@@ -85,7 +98,7 @@ exports.createProduct = async (req, res) => {
     name,
     category,
     description,
-    colors: colors ? (Array.isArray(colors) ? colors : String(colors).split(",").map((c) => c.trim())) : [],
+    colors: cleanedColors,
     specifications,
     fabricType,
     stock: Number(stock),
@@ -152,8 +165,12 @@ exports.updateProduct = async (req, res) => {
   fields.forEach((f) => {
     if (req.body[f] !== undefined) product[f] = req.body[f];
   });
-  if (req.body.colors) {
-    product.colors = Array.isArray(req.body.colors) ? req.body.colors : String(req.body.colors).split(",").map((c) => c.trim());
+  if (req.body.colors !== undefined) {
+    const cleanedColors = parseColors(req.body.colors);
+    if (cleanedColors.length === 0) {
+      return fail(res, "At least one color is required", 400);
+    }
+    product.colors = cleanedColors;
   }
   if (req.body.priceTiers !== undefined) {
     try {

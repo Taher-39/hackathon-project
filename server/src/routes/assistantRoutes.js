@@ -6,6 +6,7 @@ const {
   compare,
   similar,
   productQna,
+  onboardingAutofill,
 } = require("../controllers/assistantController");
 const { protect, optionalAuth } = require("../middleware/auth");
 
@@ -16,5 +17,6 @@ router.get("/recommendations", protect, asyncHandler(recommendations));
 router.post("/compare", asyncHandler(compare));
 router.get("/similar/:productId", asyncHandler(similar));
 router.post("/product-qna/:productId", optionalAuth, asyncHandler(productQna));
+router.post("/onboarding-autofill", protect, asyncHandler(onboardingAutofill));
 
 module.exports = router;

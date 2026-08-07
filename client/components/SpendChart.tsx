@@ -25,10 +25,10 @@ export default function SpendChart({ data }: { data: MonthPoint[] }) {
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" role="img" aria-label="Spend per month">
-        {[0, maxSpend / 2, maxSpend].map((t) => {
+        {[0, maxSpend / 2, maxSpend].map((t, i) => {
           const y = paddingTop + plotHeight - (t / maxSpend) * plotHeight;
           return (
-            <g key={t}>
+            <g key={i}>
               <line x1={paddingLeft} x2={width} y1={y} y2={y} stroke="currentColor" className="text-gray-200" strokeWidth={1} />
               <text x={paddingLeft - 6} y={y + 3} textAnchor="end" className="fill-gray-400 text-[9px]">
                 ${Math.round(t)}

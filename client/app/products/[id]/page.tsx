@@ -375,17 +375,33 @@ export default function ProductDetailPage() {
 
         <p className="text-gray-700 mt-4">{product.description}</p>
 
+        <div className="mt-4">
+          <p className="text-sm text-gray-500 mb-1.5">Available Colors</p>
+          {product.colors?.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {product.colors.map((color) => (
+                <span
+                  key={color}
+                  className="inline-flex items-center gap-1.5 rounded-full border bg-gray-50 px-3 py-1 text-sm text-gray-700"
+                >
+                  <span
+                    className="h-3 w-3 rounded-full border border-black/10"
+                    style={{ backgroundColor: color.toLowerCase().replace(/\s+/g, "") }}
+                  />
+                  {color}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Not specified by supplier</p>
+          )}
+        </div>
+
         <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
           {product.fabricType && (
             <>
               <dt className="text-gray-500">Fabric type</dt>
               <dd>{product.fabricType}</dd>
-            </>
-          )}
-          {product.colors?.length > 0 && (
-            <>
-              <dt className="text-gray-500">Colors</dt>
-              <dd>{product.colors.join(", ")}</dd>
             </>
           )}
           <dt className="text-gray-500">MOQ</dt>

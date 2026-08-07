@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface HeroSlide {
@@ -53,11 +54,14 @@ export default function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0"
           >
-            <img
+            <Image
               src={slide.image}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
               aria-hidden
+              fill
+              sizes="100vw"
+              priority={index === 0}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/70 to-gray-950/30" />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent" />

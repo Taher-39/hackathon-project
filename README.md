@@ -6,7 +6,7 @@ assistant that searches live inventory instead of giving canned answers.
 
 ## Live Demo
 
-- **Client:** https://textilehub.vercel.app
+- **Client:** https://hubtextile.vercel.app
 - **Server API:** https://textilehub-server.vercel.app
 
 ### Demo accounts
@@ -93,7 +93,7 @@ these in for you.
 **Frontend** — Next.js (App Router) · Tailwind CSS · React Hook Form + Zod · Zustand · lucide-react
 
 **Backend** — Node.js + Express · MongoDB + Mongoose · JWT (access + refresh) · Cloudinary ·
-Nodemailer · Google Gemini (AI assistant)
+Nodemailer · custom Hugging Face model (preferred AI provider; Google Gemini fallback)
 
 **Deployment** — Client on Vercel; server supports both a traditional Node process (Render/Railway,
 via `server.js`) and Vercel serverless functions (via `api/index.js` + `vercel.json`).
@@ -115,7 +115,7 @@ project-root/
 
 ```bash
 cd server
-cp .env.example .env   # fill in your own MongoDB/Cloudinary/Gemini/Gmail credentials
+cp .env.example .env   # fill in your own MongoDB/Cloudinary/Hugging Face/Gemini/Gmail credentials
 npm install
 npm run seed:demo      # optional: creates the demo buyer/supplier + sample catalog
 npm run dev            # http://localhost:5000
@@ -133,4 +133,3 @@ npm run dev             # http://localhost:3000
 See each folder's `.env.example` for the full list of required environment variables.
 
 ---
-

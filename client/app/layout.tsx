@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AssistantWidget from "@/components/AssistantWidget";
 import ToastContainer from "@/components/Toast";
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://textilehub.vercel.app";
 const OG_IMAGE = "https://images.unsplash.com/photo-1615799998603-7c6270a45196?w=1200&h=630&q=80&auto=format&fit=crop";
@@ -56,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${jakarta.variable}`}>
+    <html lang="en" className="h-full">
       <body
         className="min-h-full flex flex-col bg-gray-50 text-gray-900 font-sans antialiased"
         suppressHydrationWarning

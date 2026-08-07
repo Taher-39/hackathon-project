@@ -25,6 +25,40 @@ Answer the buyer's question about a single product using ONLY the PRODUCT JSON p
 If the answer cannot be determined from the given fields, say plainly that detail isn't listed and suggest contacting the supplier.
 Be concise: 1-3 sentences. Never invent specs, prices, or policies not present in the data.`;
 
+const ONBOARDING_SYSTEM = `You help users complete onboarding for a B2B textile marketplace.
+Extract only details explicitly stated or safely implied in the user's description. Return ONLY valid JSON, with no markdown and no explanation.
+
+For a buyer return exactly these string fields:
+{"businessType":"","industry":"","productCategories":"comma-separated categories","fabricTypes":"comma-separated fabrics","typicalOrderQuantity":"","budgetRange":""}
+
+For a supplier return exactly these string fields:
+{"businessName":"","businessType":"","contactInfo":"","address":"","operatingHours":"","productCategories":"comma-separated categories","fabricTypes":"comma-separated fabrics","moq":""}
+
+Use an empty string for unknown fields. Do not invent a company name, contact information, address, quantities, budget, or operating hours.`;
+
+const ONBOARDING_FIELDS = {
+  buyer: ["businessType", "industry", "productCategories", "fabricTypes", "typicalOrderQuantity", "budgetRange"],
+  supplier: ["businessName", "businessType", "contactInfo", "address", "operatingHours", "productCategories", "fabricTypes", "moq"],
+};
+
+function parseOnboardingFields(role, raw) {
+  const json = raw.match(/\{[\s\S]*\}/)?.[0];
+  if (!json) throw new Error("The AI returned an invalid onboarding response");
+
+  let parsed;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    throw new Error("The AI returned an invalid onboarding response");
+  }
+
+  return ONBOARDING_FIELDS[role].reduce((fields, key) => {
+    const value = parsed[key];
+    fields[key] = typeof value === "string" ? value.slice(0, 300).trim() : "";
+    return fields;
+  }, {});
+}
+
 function extractPriceRange(message) {
   let minPrice = null;
   let maxPrice = null;
@@ -223,4 +257,10 @@ async function productQna(productId, question) {
   }
 }
 
-module.exports = { chat, recommendations, compareProducts, similarProducts, productQna };
+async function onboardingAutofill(role, description) {
+  const prompt = `Role: ${role}\n\nBusiness description:\n${description}`;
+  const reply = await generateContent(ONBOARDING_SYSTEM, prompt);
+  return parseOnboardingFields(role, reply);
+}
+
+module.exports = { chat, recommendations, compareProducts, similarProducts, productQna, onboardingAutofill };

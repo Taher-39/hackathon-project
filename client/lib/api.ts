@@ -46,7 +46,7 @@ api.interceptors.response.use(
         originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
-      } catch (refreshErr) {
+      } catch {
         useAuthStore.getState().logout();
         if (typeof window !== "undefined") window.location.href = "/login";
         return Promise.reject(error);
@@ -57,6 +57,9 @@ api.interceptors.response.use(
   }
 );
 
-export function apiErrorMessage(err: any): string {
-  return err?.response?.data?.message || err?.message || "Something went wrong";
+export function apiErrorMessage(err: unknown): string {
+  if (axios.isAxiosError<{ message?: string }>(err)) {
+    return err.response?.data?.message || err.message || "Something went wrong";
+  }
+  return err instanceof Error ? err.message : "Something went wrong";
 }

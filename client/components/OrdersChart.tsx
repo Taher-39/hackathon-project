@@ -23,7 +23,10 @@ export default function OrdersChart({ data }: { data: WeekPoint[] }) {
   const barSlot = plotWidth / data.length;
   const barWidth = Math.max(6, barSlot * 0.55);
 
-  const yTicks = [0, Math.ceil(maxOrders / 2), maxOrders];
+  // De-duped: with few/no orders (maxOrders as low as 1), the midpoint and
+  // top tick can collapse to the same value, which used to render two ticks
+  // with the same key.
+  const yTicks = Array.from(new Set([0, Math.ceil(maxOrders / 2), maxOrders]));
 
   return (
     <div className="relative">

@@ -6,9 +6,10 @@ import { z } from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, apiErrorMessage } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useToastStore } from "@/lib/store";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import WizardProgress from "@/components/WizardProgress";
+import OnboardingAiAutofill from "@/components/OnboardingAiAutofill";
 
 const schema = z.object({
   businessName: z.string().min(2, "Required"),
@@ -32,7 +33,7 @@ const STEPS: { label: string; fields: (keyof FormData)[] }[] = [
 function SupplierOnboardingForm() {
   const router = useRouter();
   const { token, setAuth } = useAuthStore();
-  const [serverError, setServerError] = useState("");
+  const toast = useToastStore((s) => s.show);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -40,6 +41,7 @@ function SupplierOnboardingForm() {
     register,
     handleSubmit,
     trigger,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -53,7 +55,6 @@ function SupplierOnboardingForm() {
   }
 
   async function onSubmit(data: FormData) {
-    setServerError("");
     setLoading(true);
     try {
       const payload = {
@@ -63,9 +64,10 @@ function SupplierOnboardingForm() {
       };
       const res = await api.post("/users/onboarding/supplier", payload);
       setAuth(res.data.data.user, token as string);
+      toast("Account created! Your supplier profile is all set up.", "success");
       router.push("/dashboard/supplier");
     } catch (err) {
-      setServerError(apiErrorMessage(err));
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -73,20 +75,26 @@ function SupplierOnboardingForm() {
 
   const isLastStep = step === STEPS.length - 1;
 
+  function handleInvalidSubmit(errors: Partial<Record<keyof FormData, unknown>>) {
+    const invalidStep = STEPS.findIndex(({ fields }) => fields.some((field) => errors[field]));
+    if (invalidStep >= 0) setStep(invalidStep);
+  }
+
   return (
     <div className="max-w-xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-bold mb-2">Tell us about your business</h1>
       <p className="text-gray-600 mb-6">This will appear on your supplier profile for buyers.</p>
 
+      <OnboardingAiAutofill
+        role="supplier"
+        onApply={(fields) => {
+          (Object.entries(fields) as [keyof FormData, string][]).forEach(([field, value]) => setValue(field, value));
+        }}
+      />
+
       <WizardProgress step={step} labels={STEPS.map((s) => s.label)} />
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          isLastStep ? handleSubmit(onSubmit)(e) : goNext();
-        }}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-4">
         {step === 0 && (
           <>
             <div>
@@ -142,8 +150,6 @@ function SupplierOnboardingForm() {
           </>
         )}
 
-        {serverError && <p className="text-red-600 text-sm">{serverError}</p>}
-
         <div className="flex gap-3">
           {step > 0 && (
             <button
@@ -155,7 +161,8 @@ function SupplierOnboardingForm() {
             </button>
           )}
           <button
-            type="submit"
+            type={isLastStep ? "submit" : "button"}
+            onClick={isLastStep ? undefined : () => void goNext()}
             disabled={loading}
             className="flex-1 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 disabled:opacity-60"
           >
