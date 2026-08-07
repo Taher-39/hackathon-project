@@ -59,6 +59,12 @@ api.interceptors.response.use(
 
 export function apiErrorMessage(err: unknown): string {
   if (axios.isAxiosError<{ message?: string }>(err)) {
+    if (err.code === "ECONNABORTED" || /timeout/i.test(err.message)) {
+      return "The server is taking longer than usual to respond (it may be waking up from idle). Please try again in a moment.";
+    }
+    if (!err.response) {
+      return "Couldn't reach the server. Check your connection and try again.";
+    }
     return err.response?.data?.message || err.message || "Something went wrong";
   }
   return err instanceof Error ? err.message : "Something went wrong";

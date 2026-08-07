@@ -68,16 +68,32 @@ function SupplierProductsContent() {
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  function loadProducts() {
+  // A free-tier backend waking from a cold start can easily take longer than
+  // the 10s request timeout, which used to just dead-end on a raw "timeout of
+  // 10000ms exceeded" message with no way to recover short of a page reload.
+  // Back off across a few attempts before surfacing an error, mirroring the
+  // homepage's category-list retry.
+  const PRODUCTS_RETRY_DELAYS_MS = [1500, 3000, 5000];
+  function loadProducts(attempt = 0) {
     setLoading(true);
     api
       .get("/products/mine")
-      .then((res) => setProducts(res.data.data.products))
-      .catch((err) => setError(apiErrorMessage(err)))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        setProducts(res.data.data.products);
+        setError("");
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (attempt < PRODUCTS_RETRY_DELAYS_MS.length) {
+          setTimeout(() => loadProducts(attempt + 1), PRODUCTS_RETRY_DELAYS_MS[attempt]);
+          return;
+        }
+        setError(apiErrorMessage(err));
+        setLoading(false);
+      });
   }
 
-  useEffect(loadProducts, []);
+  useEffect(() => loadProducts(), []);
 
   function openCreate() {
     setEditing(null);
@@ -207,11 +223,17 @@ function SupplierProductsContent() {
         fd.append("removeImages", JSON.stringify(removedImageIds));
       }
 
+      // Image uploads stream through the server to Cloudinary before the
+      // response comes back, so this request naturally takes longer than a
+      // plain JSON call — on top of that, a cold-starting free-tier backend
+      // adds its own delay. The shared 10s client default is too tight for
+      // that combination, so give this specific request more room.
+      const uploadConfig = { headers: { "Content-Type": "multipart/form-data" }, timeout: 30000 };
       if (editing) {
-        await api.put(`/products/${editing._id}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+        await api.put(`/products/${editing._id}`, fd, uploadConfig);
         toast("Product updated", "success");
       } else {
-        await api.post("/products", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        await api.post("/products", fd, uploadConfig);
         toast("Product created", "success");
       }
       setShowForm(false);
